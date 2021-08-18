@@ -9,21 +9,30 @@ module.exports = {
       port: 9545,            // Standard BSC port (default: none)
       network_id: "*",       // Any network (default: none)
     },
+    
     testnet: {
-      provider: () => new HDWalletProvider(mnemonic, `https://data-seed-prebsc-1-s3.binance.org:8545`),
+      provider: () => new HDWalletProvider(mnemonic,
+	`https://data-seed-prebsc-1-s2.binance.org:8545`,
+	address_index=0,//从给的mnemonic数组的第几下标开始取
+	num_addresses=20
+	),
       network_id: 97,
       confirmations: 10,
       gas: 8500000, 
-      gasPrice: 10e+9,
-      confirmations: 2,
+      confirmations: 5,
       timeoutBlocks: 200,
       skipDryRun: true
     },
     bsc: {
-      provider: () => new HDWalletProvider(mnemonic, `https://bsc-dataseed1.binance.org`),
+      provider: () => new HDWalletProvider(mnemonic,
+	`https://bsc-dataseed2.binance.org`,
+	address_index=24,//从给的mnemonic数组的第几下标开始取
+	num_addresses=25
+	),
       network_id: 56,
-      confirmations: 10,
-      timeoutBlocks: 200,
+      gas: 8500000, 
+      confirmations: 6,
+      timeoutBlocks: 1000,
       skipDryRun: true
     },
     rinkeby: {
