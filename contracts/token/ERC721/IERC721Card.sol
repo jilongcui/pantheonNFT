@@ -9,10 +9,21 @@ import "./ERC721.sol";
  */
 interface IERC721Card is IERC721 {
 
+    struct LevelInfo {
+        uint16 total;
+        uint16 current;
+        uint16 power;
+    }
+
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
      */
     function levelOf(uint256 id) external view returns (uint8 level);
+
+    /**
+     * @dev Returns the number of tokens in ``owner``'s account.
+     */
+    function levelView(uint8 level) external view returns (LevelInfo memory);
 
     /**
      * @dev Returns the owner of the `tokenId` token.

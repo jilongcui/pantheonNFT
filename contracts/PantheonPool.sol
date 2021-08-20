@@ -312,40 +312,12 @@ contract PantheonPool is Ownable,ERC721Holder {
             );
         }
         miner.amount = miner.amount.add(_amount);
-        miner.power += _amount * pool.powerRate;
-        totalPower += miner.power;
+        miner.power += _amount.mul(pool.powerRate).div(1000);
+        totalPower += _amount.mul(pool.powerRate).div(1000);
         miner.endBlock = block.number + pool.daynum * 24 * 1200;
         miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         emit Deposit(msg.sender, _pid, _amount);
     }
-
-    // // Deposit LP tokens to PantheonPool for CHA allocation.
-    // function depositWithNFT(uint256 _pid, uint256 _amount, uint256 nft1) public {
-    //     PoolInfo storage pool = poolInfo[_pid];
-    //     MinerInfo storage miner = minerInfo[_pid][msg.sender];
-    //     updateReward();
-    //     if (miner.amount > 0) {
-    //         uint256 pending =
-    //             miner.power.mul(accChaPerShare).div(1e12).sub(
-    //                 miner.rewardDebt
-    //             );
-    //         safeChaTransfer(msg.sender, pending);
-    //     }
-    //     pool.lpToken.safeTransferFrom(
-    //         address(msg.sender),
-    //         address(this),
-    //         _amount
-    //     );
-    //     miner.amount = miner.amount.add(_amount);
-    //     uint256 level = nftToken.levelOf(nft1);
-    //     miner.power = amount * pool.powerRate;
-    //     miner.power += amount * (nft.level +1) * 2.5;
-    //     totalPower += miner.power;
-    //     miner.endBlock = block.number + pool.daynum * 24 * 1200;
-    //     miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
-    //     emit Deposit(msg.sender, _pid, _amount);
-    // }
-
 
     // Deposit LP tokens to PantheonPool for CHA allocation.
     function depositWithNFT(uint256 _pid, uint256 _amount, uint256 nft1, uint256 nft2, uint256 nft3) public {
@@ -399,8 +371,8 @@ contract PantheonPool is Ownable,ERC721Holder {
         if (level + level2 + level3 >= 6 && random() < 10) {
             rate = rate * 2;
         }
-        miner.power += _amount * rate;
-        totalPower += _amount * rate;
+        miner.power += _amount.mul(rate).div(1000);
+        totalPower += _amount.mul(rate).div(1000);
         miner.endBlock = block.number + pool.daynum * 24 * 1200;
         miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         miner.nft1 = nft1;

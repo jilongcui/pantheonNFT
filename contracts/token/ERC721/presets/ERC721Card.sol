@@ -44,8 +44,9 @@ contract ERC721Card is
     struct LevelInfo {
         uint16 total;
         uint16 current;
+        uint16 power;
     }
-
+    mapping(uint256 => uint8) nftLevel;
     mapping(uint8 => LevelInfo) levelInfo;
 
     /**
@@ -63,20 +64,42 @@ contract ERC721Card is
         _baseTokenURI = baseTokenURI;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
-
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+    }
+
+    function setLevelInfo() internal {
+        levelInfo[0] = LevelInfo({total:64000, power:100, current:0});
+        levelInfo[1] = LevelInfo({total:18000, power:150, current:0});
+        levelInfo[2] = LevelInfo({total:1800, power:300, current:0});
+        levelInfo[3] = LevelInfo({total:900, power:600, current:0});
+        levelInfo[4] = LevelInfo({total:300, power:1500, current:0});
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
         return _baseTokenURI;
     }
 
+    function levelOf(uint256 id) external view returns (uint8 level) {
+        return nftLevel[id];
+    }
+
+    function levelView(uint8 level) external view returns (
+        uint16 total,
+        uint16 current,
+        uint16 power
+    ) {
+        LevelInfo memory leve = levelInfo[level];
+        return (leve.total, leve.current, leve.power);
+    }
+
     function mintWithLevel(uint8 _level, address to) public {
         LevelInfo storage level = levelInfo[_level];
-        require(level.current < level.total -1, "ERC721PantheonCard: exceed the limit of the level");
-        level.current += 1;
-        mint(to);
+        if (level.current < level.total -1) {
+            level.current += 1;
+            uint256 id = mint(to);
+            nftLevel[id] = _level;
+        }
     }
 
     /**
@@ -90,13 +113,15 @@ contract ERC721Card is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(address to) private {
+    function mint(address to) private returns (uint256){
         require(hasRole(MINTER_ROLE, _msgSender()), "ERC721PresetMinterPauserAutoId: must have minter role to mint");
 
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.
-        _mint(to, _tokenIdTracker.current());
+        uint256 current = _tokenIdTracker.current();
+        _mint(to, current);
         _tokenIdTracker.increment();
+        return current;
     }
 
     /**
