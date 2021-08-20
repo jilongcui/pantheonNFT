@@ -73,9 +73,9 @@ contract ERC721Card is
     }
 
     function mintWithLevel(uint8 _level, address to) public {
-        LevelInfo memory level = levelInfo[_level];
+        LevelInfo storage level = levelInfo[_level];
         require(level.current < level.total -1, "ERC721PantheonCard: exceed the limit of the level");
-        
+        level.current += 1;
         mint(to);
     }
 
