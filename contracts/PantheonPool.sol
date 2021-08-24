@@ -100,7 +100,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
-    mapping(address => UserInfo) public userInfo;
+    mapping(address => uint256) public userPower;
     mapping(uint256 => mapping(address => MinerInfo)) public minerInfo;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
@@ -315,7 +315,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         uint256 power = _amount.mul(pool.powerRate).div(1000);
         miner.power += power;
         totalPower += power;
-        userTotallPower[msg.sender] += power;
+        userPower[msg.sender] += power;
         miner.endBlock = block.number.add(pool.timeBlocks); // * 24 * 1200;
         miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         emit Deposit(msg.sender, _pid, _amount);
@@ -374,7 +374,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         uint256 power = _amount.mul(rate).div(1000);
         miner.power = miner.power.add(power);
         totalPower = miner.power.add(power);
-        userTotallPower[msg.sender] = userTotallPower[msg.sender].add(power);
+        userPower[msg.sender] = userPower[msg.sender].add(power);
         miner.endBlock = block.number.add(pool.timeBlocks);
         miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         miner.nft1 = uint16(nft1);
@@ -409,7 +409,6 @@ contract PantheonPool is Ownable,ERC721Holder {
     // Withdraw LP tokens from PantheonPool.
     function withdraw(uint256 _pid, uint256 _amount) public {
         PoolInfo storage pool = poolInfo[_pid];
-        PoolInfo storage user = poolInfo[msg.sender];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
         require(miner.amount >= _amount, "withdraw: not good");
         updateReward();
@@ -430,7 +429,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         uint256 power = miner.power.mul(_amount).div(miner.amount);
         miner.power = miner.power.sub(power);
         totalPower = totalPower.sub(power);
-        userTotallPower[msg.sender] = userTotallPower[msg.sender].add(power);
+        userPower[msg.sender] = userPower[msg.sender].sub(power);
         miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
 
         pool.lpToken.transfer(address(msg.sender), _amount);
@@ -451,7 +450,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         }
         emit EmergencyWithdraw(msg.sender, _pid, miner.amount);
         totalPower = totalPower.sub(miner.power);
-        userTotallPower[msg.sender] = userTotallPower[msg.sender].add(power);
+        userPower[msg.sender] = userPower[msg.sender].sub(miner.power);
 
         miner.amount = 0;
         miner.rewardDebt = 0;
