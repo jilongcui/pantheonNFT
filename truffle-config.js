@@ -4,23 +4,23 @@ const mnemonic = fs.readFileSync(".secret").toString().trim();
 
 module.exports = {
   networks: {
-    development: {
+    develop: {
       host: "127.0.0.1",     // Localhost (default: none)
       port: 9545,            // Standard BSC port (default: none)
-      network_id: "*",       // Any network (default: none)
+      network_id: "5777",       // Any network (default: none)
+      websockets: true
     },
     
     testnet: {
       provider: () => new HDWalletProvider(mnemonic,
-	`https://data-seed-prebsc-1-s2.binance.org:8545`,
+	`https://data-seed-prebsc-2-s2.binance.org:8545`,
 	address_index=0,//从给的mnemonic数组的第几下标开始取
 	num_addresses=20
 	),
       network_id: 97,
-      confirmations: 10,
       gas: 8500000, 
       confirmations: 5,
-      timeoutBlocks: 200,
+      timeoutBlocks: 1000,
       skipDryRun: true
     },
     bsc: {

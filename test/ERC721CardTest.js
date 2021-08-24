@@ -9,20 +9,20 @@ const ERC721PresetMinterPauserAutoId= artifacts.require("ERC721PresetMinterPause
  */
 contract("NFT deployed", function (accounts) {
   it("should assert true", async function () {
-    const nft = await ERC721PresetMinterPauserAutoId.deployed()
+    const nft = await ERC721Card.deployed()
     const name = await nft.name.call();
     const symbol = await nft.symbol.call();
 
-    return assert.equal(name+"_"+symbol, "My NFT_NFT");
+    return assert.equal(symbol, "PANNFT");
   });
   it("NFT mint", async function() {
-    const nft = await ERC721PresetMinterPauserAutoId.deployed();
+    const nft = await ERC721Card.deployed();
     const to = accounts[1];
     await nft.mint(to);
     const owner0 = await nft.ownerOf.call(0);
-    const uri0 = await nft.tokenURI.call(0);
-    const uri0_1 = 'https://my-json-server.typicode.com/jilongcui/pantheon_json_db/tokens/0';
-    return assert.equal(uri0, uri0_1); //assert.equal(owner0, to) && 
+    // const uri0 = await nft.tokenURI.call(0);
+    // const uri0_1 = 'http://api.pantheon.best/tokens/0';
+    return assert.equal(owner0, to);
   });
   // it("Test token transfer", async function() {
   //   const contract = await PanToken.deployed();

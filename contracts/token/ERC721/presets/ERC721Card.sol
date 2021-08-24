@@ -49,6 +49,8 @@ contract ERC721Card is
     mapping(uint256 => uint8) nftLevel;
     mapping(uint8 => LevelInfo) levelInfo;
 
+    event MintWithLevel(address indexed to, uint16 level, uint256 id, uint256 timestamp);
+
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
      * account that deploys the contract.
@@ -66,6 +68,7 @@ contract ERC721Card is
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+        setLevelInfo();
     }
 
     function setLevelInfo() internal {
@@ -93,13 +96,17 @@ contract ERC721Card is
         return (leve.total, leve.current, leve.power);
     }
 
-    function mintWithLevel(uint8 _level, address to) public {
+    function mintWithLevel(uint8 _level, address to) public returns(bool){
+        require(_level < 5, "Level exceed the limit of 5");
         LevelInfo storage level = levelInfo[_level];
         if (level.current < level.total -1) {
             level.current += 1;
             uint256 id = mint(to);
             nftLevel[id] = _level;
+            emit MintWithLevel(to, _level, id, block.timestamp);
         }
+        
+        return true;
     }
 
     /**
@@ -114,7 +121,7 @@ contract ERC721Card is
      * - the caller must have the `MINTER_ROLE`.
      */
     function mint(address to) private returns (uint256){
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC721PresetMinterPauserAutoId: must have minter role to mint");
+        // require(hasRole(MINTER_ROLE, _msgSender()), "ERC721PresetMinterPauserAutoId: must have minter role to mint");
 
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.

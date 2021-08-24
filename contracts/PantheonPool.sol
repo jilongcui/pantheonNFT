@@ -1,20 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.6;
-
-// import "IERC20.sol";
-import "./token/ERC20/utils/SafeERC20.sol";
-// import "EnumerableSet.sol";
-// import "SafeMath.sol";
-// import "Ownable.sol";
-// import "ChaToken.sol";
+pragma solidity ^0.8.0;
 
 import "./utils/math/SafeMath.sol";
 import "./utils/Address.sol";
+import "./access/Ownable.sol";
+
 import "./token/ERC721/IERC721.sol";
 import "./token/ERC721/IERC721Card.sol";
 import "./token/ERC20/IERC20.sol";
-import "./access/Ownable.sol";
 import "./token/ERC721/utils/ERC721Holder.sol";
+import "./token/ERC20/utils/SafeERC20.sol";
 
 interface IMigratorChef {
     // Perform LP token migration from legacy UniswapV2 to ChaSwap.
@@ -56,6 +51,10 @@ contract PantheonPool is Ownable,ERC721Holder {
     //     //   4. User's `rewardDebt` gets updated.
     // }
 
+    struct UserInfo {
+        uint256 totalAmount;
+        uint256 totalPower;
+    }
     // Miner information describe miner. One should has many Miners;
     struct MinerInfo {
         uint256 amount; // 本金
@@ -70,7 +69,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     struct PoolInfo {
         IERC20 lpToken; // Address of LP token contract.
         bool isLp; // if isLp is true we should have a usdt token.
-        uint256 daynum; // daynum;
+        uint32 timeBlocks; // timeBlocks;
         uint256 powerRate; // The power rate assigned to this pool. times 1000.
     }
     
@@ -101,7 +100,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
-    // mapping(address => MinerInfo) public minerInfos;
+    mapping(address => UserInfo) public userInfo;
     mapping(uint256 => mapping(address => MinerInfo)) public minerInfo;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
@@ -109,7 +108,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     uint256 public startBlock;
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event DepositWithNFT(address indexed user, uint256 indexed pid, uint256 amount,
-        uint256 nft1, uint256 nft2, uint256 nft3);
+        uint16 nft1, uint16 nft2, uint16 nft3);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event Harvest(address indexed user, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(
@@ -165,7 +164,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         uint256 _powerRate,
         IERC20 _token,
         bool _isLp,
-        uint16 daynum,
+        uint32 timeBlocks,
         bool _withUpdate
     ) public onlyOwner {
         if (_withUpdate) {
@@ -176,7 +175,7 @@ contract PantheonPool is Ownable,ERC721Holder {
             PoolInfo({
                 lpToken: _token,
                 isLp: _isLp,
-                daynum: daynum,
+                timeBlocks: timeBlocks,
                 powerRate: _powerRate
             })
         );
@@ -287,10 +286,9 @@ contract PantheonPool is Ownable,ERC721Holder {
 
 
     // Deposit LP tokens to PantheonPool for CHA allocation.
-    function deposit(uint256 _pid, uint256 _amount) public {
+    function deposit(uint256 _pid, uint256 _amount) public returns (bool){
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
-        // require(miner.amount == 0, "You already depsoit this pool.");
         updateReward();
         if (miner.amount > 0) {
             uint256 pending =
@@ -299,31 +297,36 @@ contract PantheonPool is Ownable,ERC721Holder {
                 );
             safeChaTransfer(msg.sender, pending);
         }
+        // pool.lpToken.approve(address(this), _amount);
         pool.lpToken.transferFrom(
             address(msg.sender),
             address(this),
             _amount
         );
         if (pool.isLp) {
-            usdtToken.transferFrom(
+            // usdtToken.safeApprove(address(this), _amount.mul(1e12).div(4));
+            usdtToken.safeTransferFrom(
                 address(msg.sender),
                 address(this),
                 _amount.mul(1e12).div(4) // div(1e6).mul(1e8) equ mul(1e12)
             );
         }
         miner.amount = miner.amount.add(_amount);
-        miner.power += _amount.mul(pool.powerRate).div(1000);
-        totalPower += _amount.mul(pool.powerRate).div(1000);
-        miner.endBlock = block.number + pool.daynum * 24 * 1200;
+        uint256 power = _amount.mul(pool.powerRate).div(1000);
+        miner.power += power;
+        totalPower += power;
+        userTotallPower[msg.sender] += power;
+        miner.endBlock = block.number.add(pool.timeBlocks); // * 24 * 1200;
         miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         emit Deposit(msg.sender, _pid, _amount);
+        return true;
     }
 
     // Deposit LP tokens to PantheonPool for CHA allocation.
-    function depositWithNFT(uint256 _pid, uint256 _amount, uint256 nft1, uint256 nft2, uint256 nft3) public {
+    function depositWithNFT(uint256 _pid, uint256 _amount, uint16 nft1, uint16 nft2, uint16 nft3) public {
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
-        require(miner.amount == 0, "You already depsoit this pool.");
+        // require(miner.amount == 0, "You already depsoit this pool.");
         updateReward();
         if (miner.amount > 0) {
             uint256 pending =
@@ -349,35 +352,34 @@ contract PantheonPool is Ownable,ERC721Holder {
         uint256 level2;
         uint256 level3;
         uint256 rate = pool.powerRate;
-        if (nft1 > 0 && nftToken.ownerOf(nft1) == msg.sender ) {
+        if (nft1 > 0) {
             level = nftToken.levelOf(nft1);
             rate += nftRate[level];
-            nftToken.approve(address(this), nft1);
             nftToken.safeTransferFrom(msg.sender, address(this), nft1);
         }
-        if (nft2 > 0 && nftToken.ownerOf(nft2) == msg.sender ) {
+        if (nft2 > 0) {
             level2 = nftToken.levelOf(nft2);
             rate += nftRate[level2];
-            nftToken.approve(address(this), nft2);
             nftToken.safeTransferFrom(msg.sender, address(this), nft2);
         }
-        if (nft3 > 0 && nftToken.ownerOf(nft3) == msg.sender ) {
+        if (nft3 > 0) {
             level3 = nftToken.levelOf(nft3);
             rate += nftRate[level3];
-            nftToken.approve(address(this), nft3);
             nftToken.safeTransferFrom(msg.sender, address(this), nft3);
         }
         
         if (level + level2 + level3 >= 6 && random() < 10) {
             rate = rate * 2;
         }
-        miner.power += _amount.mul(rate).div(1000);
-        totalPower += _amount.mul(rate).div(1000);
-        miner.endBlock = block.number + pool.daynum * 24 * 1200;
+        uint256 power = _amount.mul(rate).div(1000);
+        miner.power = miner.power.add(power);
+        totalPower = miner.power.add(power);
+        userTotallPower[msg.sender] = userTotallPower[msg.sender].add(power);
+        miner.endBlock = block.number.add(pool.timeBlocks);
         miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
-        miner.nft1 = nft1;
-        miner.nft2 = nft2;
-        miner.nft3 = nft3;
+        miner.nft1 = uint16(nft1);
+        miner.nft2 = uint16(nft2);
+        miner.nft3 = uint16(nft3);
         // emit Deposit(msg.sender, _pid, _amount);
         emit DepositWithNFT(msg.sender, _pid, _amount, nft1, nft2, nft3);
     }
@@ -407,6 +409,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     // Withdraw LP tokens from PantheonPool.
     function withdraw(uint256 _pid, uint256 _amount) public {
         PoolInfo storage pool = poolInfo[_pid];
+        PoolInfo storage user = poolInfo[msg.sender];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
         require(miner.amount >= _amount, "withdraw: not good");
         updateReward();
@@ -421,8 +424,15 @@ contract PantheonPool is Ownable,ERC721Holder {
                 _amount.mul(1e12).div(4) // div(1e6).mul(1e8) equ mul(1e12)
             );
         }
+        //  reduce amount
         miner.amount = miner.amount.sub(_amount);
+        // reduce power
+        uint256 power = miner.power.mul(_amount).div(miner.amount);
+        miner.power = miner.power.sub(power);
+        totalPower = totalPower.sub(power);
+        userTotallPower[msg.sender] = userTotallPower[msg.sender].add(power);
         miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
+
         pool.lpToken.transfer(address(msg.sender), _amount);
         emit Withdraw(msg.sender, _pid, _amount);
     }
@@ -440,6 +450,9 @@ contract PantheonPool is Ownable,ERC721Holder {
             );
         }
         emit EmergencyWithdraw(msg.sender, _pid, miner.amount);
+        totalPower = totalPower.sub(miner.power);
+        userTotallPower[msg.sender] = userTotallPower[msg.sender].add(power);
+
         miner.amount = 0;
         miner.rewardDebt = 0;
         miner.power = 0;

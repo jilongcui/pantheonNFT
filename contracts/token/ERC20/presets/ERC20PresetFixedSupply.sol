@@ -27,6 +27,9 @@ contract ERC20PresetFixedSupply is ERC20Burnable {
         uint256 initialSupply,
         address owner
     ) ERC20(name, symbol) {
-        _mint(owner, initialSupply);
+        _mint(owner, initialSupply * (10 ** decimals()));
+    }
+    function decimals() public view virtual override returns (uint8) {
+        return 18;
     }
 }

@@ -6,7 +6,7 @@ import "./token/ERC20/IERC20.sol";
 import "./access/Ownable.sol";
 import "./token/ERC721/utils/ERC721Holder.sol";
 
-pragma solidity 0.8.6;
+pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
 contract PantheonC2C is Ownable, ERC721Holder{
@@ -32,9 +32,9 @@ contract PantheonC2C is Ownable, ERC721Holder{
 
   using SafeMath for uint;
 
-  event C2CDepositItemEvent(uint nftId, uint value, uint timestamp);
-  event C2CBuyItemEvent(uint nftId, uint value, uint timestamp);
-  event C2CDownItemEvent(uint nftId, uint timestamp);
+  event C2CDepositItemEvent(address owner, uint nftId, uint value, uint timestamp);
+  event C2CBuyItemEvent(address owner, uint nftId, uint value, uint timestamp);
+  event C2CDownItemEvent(address owner, uint nftId, uint timestamp);
 
   // 代币的地址
   address payable public tokenAddress;
@@ -100,7 +100,7 @@ contract PantheonC2C is Ownable, ERC721Holder{
     totalItem = totalItem.add(1);
     // c2cAllItems.push();
 
-    emit C2CDepositItemEvent(nftId, value, timestamp);
+    emit C2CDepositItemEvent(msg.sender, nftId, value, timestamp);
     
     return true;
   }
@@ -127,7 +127,7 @@ contract PantheonC2C is Ownable, ERC721Holder{
     delete c2cItems[nftId];
     totalItem = totalItem.sub(1);
     // 触发购买记录
-    emit C2CBuyItemEvent(nftId, value, timestamp);
+    emit C2CBuyItemEvent(msg.sender, nftId, value, timestamp);
 
     return true;
 
@@ -151,7 +151,7 @@ contract PantheonC2C is Ownable, ERC721Holder{
     delete c2cItems[nftId];
 
     // 触发下架记录
-    emit C2CDownItemEvent(nftId, timestamp);
+    emit C2CDownItemEvent(msg.sender, nftId, timestamp);
     totalItem = totalItem.sub(1);
     // c2cItems.push(C2CItem({
     //   nftId: nftId,

@@ -14,6 +14,8 @@ interface IERC721Card is IERC721 {
         uint16 current;
         uint16 power;
     }
+    
+    event MintWithLevel(address indexed to, uint16 level, uint256 id);
 
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
@@ -32,5 +34,5 @@ interface IERC721Card is IERC721 {
      *
      * - `tokenId` must exist.
      */
-    function mintWithLevel(uint8 level, address to) external view returns (address owner);
+    function mintWithLevel(uint8 _level, address to) external returns(bool);
 }
