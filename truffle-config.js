@@ -13,7 +13,7 @@ module.exports = {
     
     testnet: {
       provider: () => new HDWalletProvider(mnemonic,
-	`https://data-seed-prebsc-2-s2.binance.org:8545`,
+	`https://data-seed-prebsc-1-s3.binance.org:8545`,
 	address_index=0,//从给的mnemonic数组的第几下标开始取
 	num_addresses=20
 	),
@@ -25,13 +25,14 @@ module.exports = {
     },
     bsc: {
       provider: () => new HDWalletProvider(mnemonic,
-	`https://bsc-dataseed2.binance.org`,
-	address_index=24,//从给的mnemonic数组的第几下标开始取
-	num_addresses=25
+	`https://bsc-dataseed.binance.org`,
+	//`https://bsc-dataseed3.binance.org`,
+	address_index=26,//从给的mnemonic数组的第几下标开始取
+	num_addresses=29
 	),
       network_id: 56,
       gas: 8500000, 
-      confirmations: 6,
+      confirmations: 5,
       timeoutBlocks: 1000,
       skipDryRun: true
     },
@@ -58,7 +59,7 @@ module.exports = {
       // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
       settings: {          // See the solidity docs for advice about optimization and evmVersion
         optimizer: {
-          enabled: false,
+          enabled: true,
           runs: 200
         },
         // evmVersion: "byzantium"

@@ -249,14 +249,13 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
 
     // Fee
     uint256 private blackholeFeeRate = 5;
-    uint256 public totalLiquidityFee;
     // uint256 private _luckyBonusFee = 2;
     // uint256 private _holderBonusFee = 5; // 4: holder bonus, 1: redeem fund
     uint256 private airdropFeeRate = 4;
     uint256 private liquidityFeeRate = 4;
     uint256 private allTxFeeRate = 13; // all up fee.
 
-    uint256 private minTokensSellToAddToLiquidity = 100 * 10**decimals();
+    uint256 public minTokensSellToAddToLiquidity = 500 * 10**decimals();
 
     // Mapping
     mapping (address => bool) private _isExcludedFromFee;
@@ -293,20 +292,22 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         blackholeAddress = blackholeAddress_;
         airdropAddress = airdropAddress_;
         initialSupply = _initialSupply * (10**decimals());
-        _isExcludedFromFee[msg.sender] = true;
-        _isExcludedFromFee[address(this)] = true;
+        
         uniswapV2Router = IUniswapV2Router02(pancakeRouter);
         nftToken = IERC721Card(nftAddress);
 
+        _isExcludedFromFee[msg.sender] = true;
+        _isExcludedFromFee[address(this)] = true;
+        _isExcludedFromFee[airdropAddress_] = true;
         _mint(owner, initialSupply);
     }
     function decimals() public view virtual override returns (uint8) {
         return 18;
     }
 
-    // Get a random 100
+    // Get a random 1000
     function random() internal view returns (uint8) {
-        return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty)))%20);
+        return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty)))%1000);
     }
 
 
@@ -317,50 +318,23 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         // require(from != address(0), "ERC20: transfer from the zero address");
         require(to != address(0), "ERC20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
-        bool fromSwap; 
-        // address limitAddress;
-        fromSwap = false;
-        // if(from == uniswapV2Pair) {
-        //     limitAddress = to;
-        //     fromSwap = true;
-        // } else if (to == uniswapV2Pair) {
-        //     limitAddress = from;
-        //     fromSwap = true;
-        // }
-        // if(fromSwap && !_isExcludedFromFee[from] && !_isExcludedFromFee[to]
-        //     && from != owner() && to != owner()) {
-        //     if ( _lastTransferLimitTime[limitAddress] < 1)
-        //         _lastTransferLimitTime[limitAddress] = block.timestamp;
-        //     if ( _lastTransferLimitCount[limitAddress]>=20 ) {
-        //         if (block.timestamp.sub(_lastTransferLimitTime[limitAddress]) >= _onedaySeconds) {
-        //             _lastTransferLimitCount[limitAddress] = 0;
-        //             _lastTransferLimitTime[limitAddress] = block.timestamp;
-        //         }
-        //         else
-        //             require(_lastTransferLimitCount[limitAddress]<20, "Transfer exceeds limit 20 times per day .");
-        //     }
-            
-        //     require(amount <= _maxTxAmount, "Transfer amount exceeds the maxTxAmount.");
-            
-        //     _lastTransferTime[from] = block.timestamp;
-        //     _lastTransferLimitCount[limitAddress] = _lastTransferLimitCount[limitAddress].add(1);
-        // }
         
         // // is the token balance of this contract address over the min number of
         // // tokens that we need to initiate a swap + liquidity lock?
         // // also, don't get caught in a circular liquidity event.
         // // also, don't swap & liquify if sender is uniswap pair.
-        
-        bool overMinTokenBalance = totalLiquidityFee >= minTokensSellToAddToLiquidity;
+        // bool overMinTokenBalance = balanceOf(address(this)) >= minTokensSellToAddToLiquidity;
         if (
             !inSwapAndLiquify &&
-            overMinTokenBalance &&
+            balanceOf(address(this)) >= minTokensSellToAddToLiquidity &&
             // from != uniswapV2Pair &&
             swapAndLiquifyEnabled
         ) {
             // Deal bonus and liquidity
-            totalLiquidityFee -= minTokensSellToAddToLiquidity;
-            dealBonusAndLiquify(minTokensSellToAddToLiquidity);
+            if(uniswapV2Pair != address(0)) {
+                // Create a uniswap pair for this new token
+                dealBonusAndLiquify(minTokensSellToAddToLiquidity);
+            }
         }
 
         // bool fromUniswap = false;
@@ -376,52 +350,56 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         uint16 rand = random();
         uint8 level = 0;
         bool isLucky = false;
-        // uint16 rand = uint16(block.number)%100;
-        // uint16 rand2 = uint16(block.timestamp)%100;
-        // rand = (rand * (rand + rand2))%50;
-        // if ( !to.isContract() ) {
-            rand = nftToken.balanceOf(to)>5 ? rand * 3 /2 : rand;
-            if ( rand <= 5 && amount > 1000e6){
+            // rand = nftToken.balanceOf(to)>5 ? rand * 3 /2 : rand;
+        if (msg.sender == uniswapV2Pair) {
+            if ( amount > 2000e18){ // 4 * 500
                 isLucky = true;
-                level = 4;
+                if (rand < 10) level = 4;
+                else if (rand < 20) level = 3;
+                else if (rand < 50) level = 2;
+                else if (rand < 500) level = 1;
+                else level = 0;
             } else
-            if ( rand <= 5 && amount > 500e6){
+            if ( amount > 800e18){ // 4 * 200
                 isLucky = true;
-                level = 3;
+                if (rand < 5) level = 4;
+                else if (rand < 10) level = 3;
+                else if (rand < 30) level = 2;
+                else if (rand < 300) level = 1;
+                else if (rand < 800) level = 0;
+                else isLucky = false;
             } else
-            if ( rand <= 10 && amount > 500e6){
+            if (amount > 200e18) { // 4 * 50
                 isLucky = true;
-                level = 2;
+                if (rand < 1) level = 4;
+                else if (rand < 5) level = 3;
+                else if (rand < 15) level = 2;
+                else if (rand < 150) level = 1;
+                else if (rand < 500) level = 0;
+                else isLucky = false;
             } else
-            if (rand <= 20 && amount > 100e6) {
+            if (amount >= 40e18) { // 4 * 10
                 isLucky = true;
-                level = 1;
-            } else
-            if (rand <= 30 && amount >= 10e6) {
-                isLucky = true;
-                level = 0;
+                if (rand < 1) level = 3;
+                else if (rand < 3) level = 2;
+                else if (rand < 40) level = 1;
+                else if (rand < 150) level = 0;
+                else isLucky = false;
             }
             if (isLucky) {
                 nftToken.mintWithLevel(level, to);
             }
-        // }
+        }
         //if any account belongs to _isExcludedFromFee account then remove the fee
         if(_isExcludedFromFee[msg.sender] || _isExcludedFromFee[to]){
-            uint256 blackholeFee = amount.mul(blackholeFeeRate);
-            uint256 airdropFee = amount.mul(airdropFeeRate);
-            uint256 liquidityFee = amount.mul(liquidityFeeRate);
-            totalLiquidityFee += liquidityFee;
-
-            _transfer(msg.sender, blackholeAddress, blackholeFee);
-            _transfer(msg.sender, airdropAddress, airdropFee);
-            _transfer(msg.sender, to, amount.mul(allTxFeeRate));
-            
-        } else
-            //transfer amount, it will take tax, burn, liquidity fee
-            // _tokenTransferWithFee(from, to, amount);
             _transfer(msg.sender, to, amount);
-        
-        
+        } else {
+            //transfer amount, it will take tax, burn, liquidity fee
+            _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
+            _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
+            _transfer(msg.sender, address(this), amount.mul(liquidityFeeRate).div(100));
+            _transfer(msg.sender, to, amount.sub(amount.mul(allTxFeeRate).div(100)));
+        }
         //if any account belongs to _isExcludedFromFee account then remove the fee
         // if(_isExcludedFromFee[from] || _isExcludedFromFee[to]){
         //     _tokenTransferWithoutFee(from, to, amount);
@@ -526,11 +504,16 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         liquidityFeeRate = liquidityFee;
     }
 
+    function setMinTokenAddLiquidity(uint256 minTokenAddLiquidity) external onlyOwner() {
+        minTokensSellToAddToLiquidity = minTokenAddLiquidity;
+    }
+
     function setSwapAndLiquifyEnabled(bool enabled) public onlyOwner {
         if (uniswapV2Pair == address(0)) {
             // Create a uniswap pair for this new token
             uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory())
               .createPair(address(this), uniswapV2Router.WETH());
+            _isExcludedFromFee[uniswapV2Pair] = true;
         }
         swapAndLiquifyEnabled = enabled;
         emit SwapAndLiquifyEnabledUpdated(enabled);

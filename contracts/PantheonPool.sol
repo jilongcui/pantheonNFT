@@ -51,10 +51,11 @@ contract PantheonPool is Ownable,ERC721Holder {
     //     //   4. User's `rewardDebt` gets updated.
     // }
 
-    struct UserInfo {
-        uint256 totalAmount;
+    struct InviteInfo {
+        address parent;
         uint256 totalPower;
     }
+
     // Miner information describe miner. One should has many Miners;
     struct MinerInfo {
         uint256 amount; // 本金
@@ -80,6 +81,9 @@ contract PantheonPool is Ownable,ERC721Holder {
     uint256 public totalPower;
     uint16[] public nftRate = [100, 150, 300, 600, 1500]; // times 1000
 
+    // Invite
+    bool public inviteForce = false;
+    uint8 public maxInviteLayer = 10;
     // The CHA TOKEN!
     IERC20 public panToken;
     IERC20 public usdtToken;
@@ -101,6 +105,11 @@ contract PantheonPool is Ownable,ERC721Holder {
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
     mapping(address => uint256) public userPower;
+    mapping(address => address) public userParent;
+    mapping(address => uint8) public userLevel;
+    mapping(address => uint256) public inviteReward;
+    // mapping(uint8 => mapping(uint8 => uint8)) memory inviteRatio;
+    uint8[][] inviteRatio = [[5,0,0,0,0,0,0,0,0,0],[8,5,0,0,0,0,0,0,0,0],[10,6,4,2,0,0,0,0,0,0],[12,8,6,4,2,2,0,0,0,0],[14,10,8,6,4,2,2,2,0,0],[16,12,10,8,6,4,2,2,2,2],[18,14,12,10,8,6,4,2,2,2],[20,16,14,12,10,8,6,4,2,2],[22,18,16,14,12,10,8,6,4,2]];
     mapping(uint256 => mapping(address => MinerInfo)) public minerInfo;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
@@ -121,6 +130,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         IERC20 _chaAddress,
         IERC20 _usdtAddress,
         IERC721Card _nftAddress,
+        address beneficancy,
         uint256 _chaPerBlock,
         uint256 _startBlock,
         uint256 _totalReward
@@ -135,6 +145,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         lastRewardBlock =
             block.number > startBlock ? block.number : startBlock;
         // totalAllocPoint = totalAllocPoint.add(_allocPoint);
+        userParent[msg.sender] = beneficancy;
         totalPower = 0;
     }
 
@@ -193,6 +204,26 @@ contract PantheonPool is Ownable,ERC721Holder {
         poolInfo[_pid].powerRate = _powerRate;
     }
 
+    function setInvite(
+        address parent
+    ) public {
+        require(userParent[parent] != address(0), "Parent should be invite first.");
+        require(parent != msg.sender, "Parent should not be itself.");
+        if (userParent[msg.sender] == address(0)) {
+            userParent[msg.sender] = parent;
+        }
+    }
+
+    function setInviteEnable(
+        bool enable
+    ) public {
+        inviteForce = enable;
+    }
+
+    function setMaxInviteLayer(uint8 layer) public {
+        maxInviteLayer = layer;
+    }
+
     // Set the migrator contract. Can only be called by the owner.
     // function setMigrator(IMigratorChef _migrator) public onlyOwner {
     //     migrator = _migrator;
@@ -209,7 +240,9 @@ contract PantheonPool is Ownable,ERC721Holder {
     //     require(bal == newLpToken.balanceOf(address(this)), "migrate: bad");
     //     pool.lpToken = newLpToken;
     // }
-
+    function getInviteInfo(address addr) public view returns (uint16, uint256, uint256, address){
+        return (userLevel[addr],userPower[addr], inviteReward[addr], userParent[addr]);
+    }
     // Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to)
         public
@@ -237,7 +270,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     {
         // PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][_user];
-        uint accCha = accChaPerShare;
+        uint256 accCha = accChaPerShare;
         if (block.number > lastRewardBlock && totalPower != 0) {
             uint256 multiplier =
                 getMultiplier(lastRewardBlock, block.number);
@@ -261,7 +294,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     function updateReward() public {
         // PoolInfo storage pool = poolInfo[_pid];
         // uint256 remain = panToken.balanceOf(address(this));
-        uint256 remain = totalReward - releasedReward;
+        uint256 remain = totalReward.sub(releasedReward);
         if (block.number <= lastRewardBlock && remain <= 0) {
             return;
         }
@@ -269,7 +302,7 @@ contract PantheonPool is Ownable,ERC721Holder {
             lastRewardBlock = block.number;
             return;
         }
-        
+        require(lastRewardBlock<=block.number, "lastRewardBlock not valid");
         uint256 multiplier = getMultiplier(lastRewardBlock, block.number);
         uint256 chaReward = multiplier.mul(chaPerBlock);
         // panToken.mint(devaddr, chaReward.div(10));
@@ -277,7 +310,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         if ( remain < chaReward ) {
             chaReward = remain;
         }
-        releasedReward += chaReward;
+        releasedReward  = releasedReward.add(chaReward);
         accChaPerShare = accChaPerShare.add(
             chaReward.mul(1e12).div(totalPower)
         );
@@ -288,8 +321,11 @@ contract PantheonPool is Ownable,ERC721Holder {
     // Deposit LP tokens to PantheonPool for CHA allocation.
     function deposit(uint256 _pid, uint256 _amount) public returns (bool){
         PoolInfo storage pool = poolInfo[_pid];
-        MinerInfo storage miner = minerInfo[_pid][msg.sender];
+        MinerInfo memory miner = minerInfo[_pid][msg.sender];
         updateReward();
+        if (inviteForce == true) {
+            require(userParent[msg.sender] != address(0), "You need be invited first.");
+        }
         if (miner.amount > 0) {
             uint256 pending =
                 miner.power.mul(accChaPerShare).div(1e12).sub(
@@ -308,16 +344,19 @@ contract PantheonPool is Ownable,ERC721Holder {
             usdtToken.safeTransferFrom(
                 address(msg.sender),
                 address(this),
-                _amount.mul(1e12).div(4) // div(1e6).mul(1e8) equ mul(1e12)
+                _amount.div(4)
             );
         }
+        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         miner.amount = miner.amount.add(_amount);
         uint256 power = _amount.mul(pool.powerRate).div(1000);
-        miner.power += power;
-        totalPower += power;
-        userPower[msg.sender] += power;
-        miner.endBlock = block.number.add(pool.timeBlocks); // * 24 * 1200;
-        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
+        miner.power = miner.power.add(power);
+        totalPower = totalPower.add(power);
+        userPower[msg.sender] = userPower[msg.sender].add(power);
+        uint256 blockNumber = block.number;
+        miner.endBlock = blockNumber.add(pool.timeBlocks); // * 24 * 1200;
+        userLevel[msg.sender] = getUserLevel(userPower[msg.sender]);
+        minerInfo[_pid][msg.sender] = miner;
         emit Deposit(msg.sender, _pid, _amount);
         return true;
     }
@@ -325,7 +364,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     // Deposit LP tokens to PantheonPool for CHA allocation.
     function depositWithNFT(uint256 _pid, uint256 _amount, uint16 nft1, uint16 nft2, uint16 nft3) public {
         PoolInfo storage pool = poolInfo[_pid];
-        MinerInfo storage miner = minerInfo[_pid][msg.sender];
+        MinerInfo memory miner = minerInfo[_pid][msg.sender];
         // require(miner.amount == 0, "You already depsoit this pool.");
         updateReward();
         if (miner.amount > 0) {
@@ -344,7 +383,7 @@ contract PantheonPool is Ownable,ERC721Holder {
             usdtToken.transferFrom(
                 address(msg.sender),
                 address(this),
-                _amount.mul(1e12).div(4) // div(1e6).mul(1e8) equ mul(1e12)
+                _amount.div(4)
             );
         }
         miner.amount = miner.amount.add(_amount);
@@ -352,44 +391,74 @@ contract PantheonPool is Ownable,ERC721Holder {
         uint256 level2;
         uint256 level3;
         uint256 rate = pool.powerRate;
-        if (nft1 > 0) {
+        if (nft1 > 0 && nftToken.ownerOf(nft1) == msg.sender) {
             level = nftToken.levelOf(nft1);
             rate += nftRate[level];
             nftToken.safeTransferFrom(msg.sender, address(this), nft1);
         }
-        if (nft2 > 0) {
+        if (nft2 > 0 && nftToken.ownerOf(nft2) == msg.sender) {
             level2 = nftToken.levelOf(nft2);
             rate += nftRate[level2];
             nftToken.safeTransferFrom(msg.sender, address(this), nft2);
         }
-        if (nft3 > 0) {
+        if (nft3 > 0 && nftToken.ownerOf(nft3) == msg.sender) {
             level3 = nftToken.levelOf(nft3);
             rate += nftRate[level3];
             nftToken.safeTransferFrom(msg.sender, address(this), nft3);
         }
-        
-        if (level + level2 + level3 >= 6 && random() < 10) {
-            rate = rate * 2;
+        // 同级别三张，有彩蛋
+        if(level == level2 && level2 == level3 && random() < 10) {
+            if (level == 2 ) {
+                rate = rate * 13 / 10;
+            } else if (level==3) {
+                rate = rate * 15 / 10;
+            } else if (level == 4) {
+                rate = rate * 20 / 10;
+            }
         }
+        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         uint256 power = _amount.mul(rate).div(1000);
         miner.power = miner.power.add(power);
-        totalPower = miner.power.add(power);
+        totalPower = totalPower.add(power);
         userPower[msg.sender] = userPower[msg.sender].add(power);
-        miner.endBlock = block.number.add(pool.timeBlocks);
-        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
+        uint256 blockNumber = block.number;
+        miner.endBlock = blockNumber.add(pool.timeBlocks);
         miner.nft1 = uint16(nft1);
         miner.nft2 = uint16(nft2);
         miner.nft3 = uint16(nft3);
-        // emit Deposit(msg.sender, _pid, _amount);
+        userLevel[msg.sender] = getUserLevel(userPower[msg.sender]);
+        minerInfo[_pid][msg.sender] = miner;
         emit DepositWithNFT(msg.sender, _pid, _amount, nft1, nft2, nft3);
     }
+    function getUserLevel(uint256 power) private pure returns(uint8){
+        uint8 level;
+        if (power < 5000) {
+            level = 3;
+            if (power < 3000) {
+                level = 2;
+                if(power <1000) {
+                    level = 1;
+                    if (power < 500)
+                        level = 0;
+                }
+            }
+        } else {
+            level = 5;
+            if (power > 15000) {
+                level = 6;
+                if (power > 20000) {
+                    level =7;
+                    if (power > 30000)
+                        level = 8;
+                }
+            }
+        }
+        return level;
+    }
     // // Get a random 100
-    // function random() private view returns (uint8) {
-    //     return uint8(uint256(keccak256(block.timestamp, block.difficulty))%100);
-    // }
     // Get a random 100
     function random() private view returns (uint8) {
-        return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty)))%251);
+        return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty)))%100);
     }
     // harvest LP tokens from PantheonPool.
     function harvest(uint256 _pid) public {
@@ -410,30 +479,70 @@ contract PantheonPool is Ownable,ERC721Holder {
     function withdraw(uint256 _pid, uint256 _amount) public {
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
-        require(miner.amount >= _amount, "withdraw: not good");
+        require(miner.amount > 0, "withdraw: not good");
+        require(accChaPerShare > 0, "accChaPerShare should not be zero");
+        // require(miner.endBlock < block.number, "Cannot withdraw with days limit.");
         updateReward();
-        uint256 pending =
-            miner.amount.mul(accChaPerShare).div(1e12).sub(
+        if (miner.amount.mul(accChaPerShare).div(1e12) > miner.rewardDebt) {
+            uint256 pending = miner.amount.mul(accChaPerShare).div(1e12).sub(
                 miner.rewardDebt
             );
-        safeChaTransfer(msg.sender, pending);
+            safeChaTransfer(msg.sender, pending);
+        }
+        
         if (pool.isLp) {
             usdtToken.transfer(
                 msg.sender,
-                _amount.mul(1e12).div(4) // div(1e6).mul(1e8) equ mul(1e12)
+                miner.amount.div(4) // div(1e6).mul(1e8) equ mul(1e12)
             );
         }
-        //  reduce amount
-        miner.amount = miner.amount.sub(_amount);
-        // reduce power
-        uint256 power = miner.power.mul(_amount).div(miner.amount);
-        miner.power = miner.power.sub(power);
-        totalPower = totalPower.sub(power);
-        userPower[msg.sender] = userPower[msg.sender].sub(power);
-        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
 
+        // miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
+        // userLevel[msg.sender] = getUserLevel(userPower[msg.sender]);
         pool.lpToken.transfer(address(msg.sender), _amount);
+
+        if (miner.nft1 > 0) {
+            nftToken.safeTransferFrom(address(this), msg.sender, miner.nft1);
+        }
+        if (miner.nft2 > 0) {
+            nftToken.safeTransferFrom(address(this), msg.sender, miner.nft2);
+        }
+        if (miner.nft3 > 0) {
+            nftToken.safeTransferFrom(address(this), msg.sender, miner.nft3);
+        }
+
+        // reduce power
+        // uint256 power = miner.power.mul(_amount).div(miner.amount);
+        totalPower = totalPower.sub(miner.power);
+
+        userPower[msg.sender] = userPower[msg.sender].sub(miner.power);
+        //  reduce amount
+        miner.power = 0;
+        miner.amount = 0;
+        miner.nft1 = 0;
+        miner.nft2 = 0;
+        miner.nft3 = 0;
+        miner.rewardDebt = 0;
+        // minerInfo[_pid][msg.sender] = 0;
+
         emit Withdraw(msg.sender, _pid, _amount);
+    }
+
+    function calculeInviteReward(address child, uint256 total) private {
+
+        for(uint8 layer=0; layer< maxInviteLayer; layer++) {
+            address parent = userParent[child];
+            if (parent == address(0) && parent == child)
+                return;
+            uint8 level = userLevel[parent];
+            uint8 ratio = inviteRatio[level][layer];
+            if (ratio <= 0) {
+                return ;
+            }
+            uint256 reward = total.mul(ratio).div(100);
+            inviteReward[parent] = inviteReward[parent].add(reward);
+            child = parent;
+        }
     }
 
     // Withdraw without caring about rewards. EMERGENCY ONLY.
@@ -445,13 +554,13 @@ contract PantheonPool is Ownable,ERC721Holder {
         if (pool.isLp) {
             usdtToken.transfer(
                 msg.sender,
-                miner.amount.mul(1e12).div(4) // div(1e6).mul(1e8) equ mul(1e12)
+                miner.amount.div(4) // div(1e6).mul(1e8) equ mul(1e12)
             );
         }
         emit EmergencyWithdraw(msg.sender, _pid, miner.amount);
-        totalPower = totalPower.sub(miner.power);
         userPower[msg.sender] = userPower[msg.sender].sub(miner.power);
-
+        userLevel[msg.sender] = getUserLevel(userPower[msg.sender]);
+        totalPower = totalPower.sub(miner.power);
         miner.amount = 0;
         miner.rewardDebt = 0;
         miner.power = 0;
@@ -464,5 +573,7 @@ contract PantheonPool is Ownable,ERC721Holder {
             _amount = chaBal;
         }
         panToken.transfer(_to, _amount);
+        if(inviteForce)
+           calculeInviteReward(_to, _amount);
     }
 }
