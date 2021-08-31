@@ -74,7 +74,8 @@ module.exports = async function(deployer, network, accounts) {
     console.log(airdropAddress);
     console.log(blackHoleAddress);
 
-    await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
+    // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
+    await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, liquidAddress, 200000000, accounts[0]);
     let panToken = await ERC20PanToken.deployed();
     console.log(panToken.address);
     await panToken.transfer(accounts[1], web3.utils.toWei("20000"));
@@ -214,7 +215,7 @@ module.exports = async function(deployer, network, accounts) {
     pancakeRouter = "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3";
     await deployer.deploy(ERC721Card, "PAN NFT","PANNFT", "http://api.pantheon.best/tokens/");
     let erc721 = await ERC721Card.deployed();
-
+  
     let account1 = "0x3578ca6f43fD3C468c6E16DBC1ebec2f100030F6";
     let account2 = "0x95C65C0752b64B8Df8B749Dd096b47c473eba561";
 
@@ -250,7 +251,8 @@ module.exports = async function(deployer, network, accounts) {
     console.log(airdropAddress);
     console.log(blackHoleAddress);
 
-    await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
+    // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
+    await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, liquidAddress, 200000000, accounts[0]);
     let panToken = await ERC20PanToken.deployed();
 
     await panToken.transfer(accounts[1], web3.utils.toWei("10000"));
@@ -339,15 +341,17 @@ module.exports = async function(deployer, network, accounts) {
     WUSDT = "0xc350c613e1c1f8e90f662ccbaf24cd32fe0ebc0b";
     BUSDT = "0x55d398326f99059ff775485246999027b3197955";
     pancakeRouter = "0x10ed43c718714eb63d5aa57b78b54704e256024e";
-    airdropAddress = "0xdd7421eCd925B8F1D6a7591C8BF1Ba77b753a958";
+    airdropAddress = "0x5Bbdf8eDC852f114eDAF8D92Ce31cC74F62Db2BC";
+    liquidAddress = "0xBDe8748b12516f73B4e6682e01Ec95C469C639DF"
     beneficancy = "0x2d6D02A42CB933c5Fb339cC79837b1b0Ef4fab34";
-    console.log("account26", accounts[26]);
+    console.log("accounts", accounts);
 
     await deployer.deploy(ERC721Card, "PAN NFT","PANNFT", "https://api.pantheon.best/tokens/");
     let erc721 = await ERC721Card.deployed();
 
     let account1 = "0x3578ca6f43fD3C468c6E16DBC1ebec2f100030F6";
     let account2 = "0x95C65C0752b64B8Df8B749Dd096b47c473eba561";
+
 
     // await erc721.mintWithLevel(0, accounts[0]);
     // await erc721.mintWithLevel(1, accounts[0]);
@@ -381,7 +385,7 @@ module.exports = async function(deployer, network, accounts) {
     console.log(airdropAddress);
     console.log(blackHoleAddress);
 
-    await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
+    await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, liquidAddress, 200000000, accounts[0]);
     let panToken = await ERC20PanToken.deployed();
     panToken.setSwapAndLiquifyEnabled(true);
 
@@ -405,15 +409,15 @@ module.exports = async function(deployer, network, accounts) {
     // await deployer.deploy(PantheonC2C, ERC721Card.address, panToken.address);
     await deployer.deploy(PantheonC2C, ERC721Card.address, BUSDT); // USDT for buy NFT
     chaPerBlock = web3.utils.toWei("50000")/24/1200;
-    await deployer.deploy(PantheonPool, panToken.address, BUSDT, ERC721Card.address, beneficancy, web3.utils.toWei("1.736111"), 0, web3.utils.toWei("10000000"));
+    await deployer.deploy(PantheonPool, panToken.address, BUSDT, ERC721Card.address, beneficancy, web3.utils.toWei("1.736111"), 0, web3.utils.toWei("149600000"));
     let pool = await PantheonPool.deployed();
     // 要转给那几个地址
     await panToken.transfer("0x6089046d565D0B28ab31aAe67dD5F0a1E44C46c9", web3.utils.toWei("20000000")); // 10%=2000,0000
     await panToken.transfer("0xdA6fe2F3aCfcc396c60d98AA61BD709953795537", web3.utils.toWei("20000000")); // 10% = 2000,00000
     await panToken.transfer("0xE59034a1999951c4D9500B244666842E00Bd9E01", web3.utils.toWei("10000000")); // 5% = 1000,0000
-    // await panToken.transfer("0xd7F6344E257681a90e138201E2290A4F8F2a2C57", web3.utils.toWei("400000")); // 0.2% = 40,0000
-    await panToken.transfer(ido.address, web3.utils.toWei("400000"));
-    await panToken.transfer(pool.address, web3.utils.toWei("49600000")); // 74.8% = 40,0000
+    await panToken.transfer("0xd7F6344E257681a90e138201E2290A4F8F2a2C57", web3.utils.toWei("400000")); // 0.2% = 40,0000
+    // await panToken.transfer(ido.address, web3.utils.toWei("400000"));
+    await panToken.transfer(pool.address, web3.utils.toWei("149600000")); // 74.8% = 40,0000
 
     // console.log(token);
     // pool.addPool(rate, token, isLp, dayNum, withUpdate);
@@ -457,26 +461,6 @@ module.exports = async function(deployer, network, accounts) {
     claimStart = toTimestamp("2021-08-19 14:32:00");
     claimEnd = toTimestamp("2021-11-23 14:40:00");
   }
-  console.log(PancakeRouter);
-
-  if (network == "development") {
-    // _panAddress = "0x226BAb96eA6e48F2D7e091085d378979a0635e17";
-    _usdtAddress = "0x226BAb96eA6e48F2D7e091085d378979a0635e17";
-  } if (network == "testnet") {
-    // _panAddress = '0x63aA6b76120FBD69EA0ca0Ad61e6E342E2604e52';
-    _usdtAddress = "0x226BAb96eA6e48F2D7e091085d378979a0635e17";
-  } if (network == "bsc") {
-    // _panAddress = '0x63aA6b76120FBD69EA0ca0Ad61e6E342E2604e52';
-    _usdtAddress = "0x226BAb96eA6e48F2D7e091085d378979a0635e17";
-  }
-
-  // console.log(_panAddress);
-  // // deployer.deploy(ERC721PresetMinterPauserAutoId, "PAN NFT","PANNFT", "https://my-json-server.typicode.com/jilongcui/pantheon_json_db/tokens/").then(function() {
-  // deployer.deploy(ERC721Card, "PAN NFT","PANNFT", "https://api.pantheon.best/tokens/").then(function() {
-  //   deployer.deploy(PantheonC2C, ERC721Card.address, _panAddress);
-  //   // chaPerBlock = 50000/24/1200 x 10**6
-  //   deployer.deploy(PantheonPool, _panAddress, ERC721Card.address, 1, 0, 1.736111e6);
-  // });
 };
 
 function toTimestamp(strDate){

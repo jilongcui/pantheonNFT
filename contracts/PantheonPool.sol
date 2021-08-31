@@ -271,15 +271,20 @@ contract PantheonPool is Ownable,ERC721Holder {
         // PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][_user];
         uint256 accCha = accChaPerShare;
-        if (block.number > lastRewardBlock && totalPower != 0) {
+        uint256 endBlock = block.number;
+        if (block.number > miner.endBlock) {
+            endBlock = miner.endBlock;
+        }
+        if (endBlock > lastRewardBlock && totalPower != 0) {
             uint256 multiplier =
-                getMultiplier(lastRewardBlock, block.number);
+                getMultiplier(lastRewardBlock, endBlock);
             uint256 chaReward = multiplier.mul(chaPerBlock);
             accCha = accCha.add(
                 chaReward.mul(1e12).div(totalPower)
             );
+            return miner.power.mul(accCha).div(1e12).sub(miner.rewardDebt);
         }
-        return miner.power.mul(accCha).div(1e12).sub(miner.rewardDebt);
+        return 0;
     }
 
     // Update reward vairables for all pools. Be careful of gas spending!
@@ -347,7 +352,6 @@ contract PantheonPool is Ownable,ERC721Holder {
                 _amount.div(4)
             );
         }
-        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         miner.amount = miner.amount.add(_amount);
         uint256 power = _amount.mul(pool.powerRate).div(1000);
         miner.power = miner.power.add(power);
@@ -356,6 +360,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         uint256 blockNumber = block.number;
         miner.endBlock = blockNumber.add(pool.timeBlocks); // * 24 * 1200;
         userLevel[msg.sender] = getUserLevel(userPower[msg.sender]);
+        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         minerInfo[_pid][msg.sender] = miner;
         emit Deposit(msg.sender, _pid, _amount);
         return true;
@@ -416,7 +421,6 @@ contract PantheonPool is Ownable,ERC721Holder {
                 rate = rate * 20 / 10;
             }
         }
-        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         uint256 power = _amount.mul(rate).div(1000);
         miner.power = miner.power.add(power);
         totalPower = totalPower.add(power);
@@ -427,28 +431,30 @@ contract PantheonPool is Ownable,ERC721Holder {
         miner.nft2 = uint16(nft2);
         miner.nft3 = uint16(nft3);
         userLevel[msg.sender] = getUserLevel(userPower[msg.sender]);
+        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
         minerInfo[_pid][msg.sender] = miner;
         emit DepositWithNFT(msg.sender, _pid, _amount, nft1, nft2, nft3);
     }
     function getUserLevel(uint256 power) private pure returns(uint8){
         uint8 level;
-        if (power < 5000) {
+        power = power.div(1e18);
+        if (power < 50000) {
             level = 3;
-            if (power < 3000) {
+            if (power < 30000) {
                 level = 2;
-                if(power <1000) {
+                if(power <10000) {
                     level = 1;
-                    if (power < 500)
+                    if (power < 5000)
                         level = 0;
                 }
             }
         } else {
             level = 5;
-            if (power > 15000) {
+            if (power > 150000) {
                 level = 6;
-                if (power > 20000) {
+                if (power > 200000) {
                     level =7;
-                    if (power > 30000)
+                    if (power > 300000)
                         level = 8;
                 }
             }

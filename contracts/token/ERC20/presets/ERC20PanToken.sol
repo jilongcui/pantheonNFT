@@ -242,6 +242,7 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
     address public uniswapV2Pair;
     address public immutable blackholeAddress;
     address public immutable airdropAddress;
+    address public immutable liquidAddress;
     IERC721Card public nftToken;
     uint256 public initialSupply;
     bool inSwapAndLiquify;
@@ -285,12 +286,14 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         address nftAddress,
         address blackholeAddress_,
         address airdropAddress_,
+        address liquidAddress_,
         uint256 _initialSupply,
         address owner
     ) ERC20("PAN Token", "PAN") {
         
         blackholeAddress = blackholeAddress_;
         airdropAddress = airdropAddress_;
+        liquidAddress = liquidAddress_;
         initialSupply = _initialSupply * (10**decimals());
         
         uniswapV2Router = IUniswapV2Router02(pancakeRouter);
@@ -324,18 +327,18 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         // // also, don't get caught in a circular liquidity event.
         // // also, don't swap & liquify if sender is uniswap pair.
         // bool overMinTokenBalance = balanceOf(address(this)) >= minTokensSellToAddToLiquidity;
-        if (
-            !inSwapAndLiquify &&
-            balanceOf(address(this)) >= minTokensSellToAddToLiquidity &&
-            // from != uniswapV2Pair &&
-            swapAndLiquifyEnabled
-        ) {
-            // Deal bonus and liquidity
-            if(uniswapV2Pair != address(0)) {
-                // Create a uniswap pair for this new token
-                dealBonusAndLiquify(minTokensSellToAddToLiquidity);
-            }
-        }
+        // if (
+        //     !inSwapAndLiquify &&
+        //     balanceOf(address(this)) >= minTokensSellToAddToLiquidity &&
+        //     // from != uniswapV2Pair &&
+        //     swapAndLiquifyEnabled
+        // ) {
+        //     // Deal bonus and liquidity
+        //     if(uniswapV2Pair != address(0)) {
+        //         // Create a uniswap pair for this new token
+        //         dealBonusAndLiquify(minTokensSellToAddToLiquidity);
+        //     }
+        // }
 
         // bool fromUniswap = false;
         
@@ -397,75 +400,68 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
             //transfer amount, it will take tax, burn, liquidity fee
             _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
             _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
-            _transfer(msg.sender, address(this), amount.mul(liquidityFeeRate).div(100));
+            _transfer(msg.sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
             _transfer(msg.sender, to, amount.sub(amount.mul(allTxFeeRate).div(100)));
         }
-        //if any account belongs to _isExcludedFromFee account then remove the fee
-        // if(_isExcludedFromFee[from] || _isExcludedFromFee[to]){
-        //     _tokenTransferWithoutFee(from, to, amount);
-            
-        // } else
-        //     //transfer amount, it will take tax, burn, liquidity fee
-        //     _tokenTransferWithFee(from, to, amount);
         return true;
         
     }
 
-    function dealBonusAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
-        // split the contract balance into halves
-        // 3/8 for liquidity, 5/8 for holder bonus
-        uint256 half = contractTokenBalance.div(2); // 
-        uint256 otherHalf = contractTokenBalance.sub(half);
+    // function dealBonusAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
+    //     // split the contract balance into halves
+    //     // 3/8 for liquidity, 5/8 for holder bonus
+    //     uint256 half = contractTokenBalance.div(2); // 
+    //     uint256 otherHalf = contractTokenBalance.sub(half);
 
-        // capture the contract's current ETH balance.
-        // this is so that we can capture exactly the amount of ETH that the
-        // swap creates, and not make the liquidity event include any ETH that
-        // has been manually sent to the contract
-        uint256 initialBalance = address(this).balance;
+    //     // capture the contract's current ETH balance.
+    //     // this is so that we can capture exactly the amount of ETH that the
+    //     // swap creates, and not make the liquidity event include any ETH that
+    //     // has been manually sent to the contract
+    //     uint256 initialBalance = address(this).balance;
 
-        // swap tokens for ETH
-        swapTokensForEth(otherHalf); // <- this breaks the ETH -> HATE swap when swap+liquify is triggered
+    //     // swap tokens for ETH
+    //     swapTokensForEth(otherHalf); // <- this breaks the ETH -> HATE swap when swap+liquify is triggered
 
-        // how much ETH did we just swap into?
-        uint256 newBalance = address(this).balance.sub(initialBalance);
+    //     // how much ETH did we just swap into?
+    //     uint256 newBalance = address(this).balance.sub(initialBalance);
         
-        // add liquidity to uniswap
-        addLiquidity(half, newBalance);
-        emit SwapAndLiquify(half, newBalance, otherHalf);
-    }
+    //     // add liquidity to uniswap
+    //     addLiquidity(half, newBalance);
+    //     emit SwapAndLiquify(half, newBalance, otherHalf);
+    // }
 
-    function swapTokensForEth(uint256 tokenAmount) private {
-        // generate the uniswap pair path of token -> weth
-        address[] memory path = new address[](2);
-        path[0] = address(this);
-        path[1] = uniswapV2Router.WETH();
+    // function swapTokensForEth(uint256 tokenAmount) private {
+    //     // generate the uniswap pair path of token -> weth
+    //     address[] memory path = new address[](2);
+    //     path[0] = address(this);
+    //     path[1] = uniswapV2Router.WETH();
         
-        _approve(address(this), address(uniswapV2Router), tokenAmount);
+    //     _approve(address(this), address(uniswapV2Router), tokenAmount);
 
-        // make the swap
-        uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
-            tokenAmount,
-            0, // accept any amount of ETH
-            path,
-            address(this),
-            block.timestamp
-        );
-    }
+    //     // make the swap
+    //     uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+    //         tokenAmount,
+    //         0, // accept any amount of ETH
+    //         path,
+    //         address(this),
+    //         block.timestamp
+    //     );
+    // }
 
-    function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
-        // approve token transfer to cover all possible scenarios
-        _approve(address(this), address(uniswapV2Router), tokenAmount);
+    // function addLiquidity(uint256 tokenAmount, uint256 ethAmount) private {
+    //     // approve token transfer to cover all possible scenarios
+    //     _approve(address(this), address(uniswapV2Router), tokenAmount);
 
-        // add the liquidity
-        uniswapV2Router.addLiquidityETH{value: ethAmount}(
-            address(this),
-            tokenAmount,
-            0, // slippage is unavoidable
-            0, // slippage is unavoidable
-            owner(),
-            block.timestamp
-        );
-    }
+    //     // add the liquidity
+    //     uniswapV2Router.addLiquidityETH{value: ethAmount}(
+    //         address(this),
+    //         tokenAmount,
+    //         0, // slippage is unavoidable
+    //         0, // slippage is unavoidable
+    //         owner(),
+    //         block.timestamp
+    //     );
+    // }
 
     function setNFTToken(address nftAddress_) public onlyOwner{
         require(nftAddress_ != address(0));

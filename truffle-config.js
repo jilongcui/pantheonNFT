@@ -25,9 +25,9 @@ module.exports = {
     },
     bsc: {
       provider: () => new HDWalletProvider(mnemonic,
-	`https://bsc-dataseed.binance.org`,
+	`https://bsc-dataseed1.binance.org`,
 	//`https://bsc-dataseed3.binance.org`,
-	address_index=26,//从给的mnemonic数组的第几下标开始取
+	address_index=27,//从给的mnemonic数组的第几下标开始取
 	num_addresses=29
 	),
       network_id: 56,
