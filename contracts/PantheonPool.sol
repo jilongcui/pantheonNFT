@@ -490,7 +490,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
         require(miner.amount > 0, "withdraw: not good");
         require(accChaPerShare > 0, "accChaPerShare should not be zero");
-        // require(miner.endBlock < block.number, "Cannot withdraw with days limit.");
+        require(miner.endBlock <= block.number, "Cannot withdraw with days limit.");
         updateReward();
         if (miner.amount.mul(accChaPerShare).div(1e12) > miner.rewardDebt) {
             uint256 pending = miner.amount.mul(accChaPerShare).div(1e12).sub(
