@@ -407,6 +407,26 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         
     }
 
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) public virtual override returns (bool) {
+        //if any account belongs to _isExcludedFromFee account then remove the fee
+        if(_isExcludedFromFee[msg.sender] || _isExcludedFromFee[recipient]){
+            _transfer(msg.sender, recipient, amount);
+        } else {
+            //transfer amount, it will take tax, burn, liquidity fee
+            _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
+            _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
+            _transfer(msg.sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
+            _transfer(msg.sender, recipient, amount.sub(amount.mul(allTxFeeRate).div(100)));
+        }
+        _approve(sender, msg.sender, allowance(sender,msg.sender).sub(amount, "ERC20: transfer amount exceeds allowance"));
+
+        return true;
+    }
+
     // function dealBonusAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
     //     // split the contract balance into halves
     //     // 3/8 for liquidity, 5/8 for holder bonus
