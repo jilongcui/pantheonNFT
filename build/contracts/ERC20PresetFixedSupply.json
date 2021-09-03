@@ -14507,7 +14507,7 @@
     }
   },
   "schemaVersion": "3.4.2",
-  "updatedAt": "2021-08-25T23:01:59.963Z",
+  "updatedAt": "2021-09-01T07:58:17.003Z",
   "networkType": "ethereum",
   "devdoc": {
     "details": "{ERC20} token, including:  - Preminted initial supply  - Ability for holders to burn (destroy) their tokens  - No access control mechanism (for minting/pausing) and hence no governance This contract uses {ERC20Burnable} to include burn capabilities - head to its documentation for details. _Available since v3.4._",

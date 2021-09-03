@@ -11,7 +11,7 @@ contract PantheonInviteReward is Ownable{
 
   uint TOTAL_PAN_SUPPLY = 40*10**10; // 40*10^10 400000
   uint MIN_PAN_CLAIM = 1*10**6; // 1 PAN
-  uint MIN_CLAIM_TIMEOFF = 24* 1200; // 1Day
+  uint MIN_CLAIM_TIMEOFF = 24* 3600; // 1Day
 
   struct Reward {
     uint lastAmount;
@@ -28,7 +28,7 @@ contract PantheonInviteReward is Ownable{
   // Pool token
   address public poolAddress;
   // Claim is enabled
-  bool claimEnabled;
+  bool public claimEnabled;
   // 新的IDO地址，用户领取状态
   mapping(address => Reward) public rewardInfo;
   // Event
@@ -71,23 +71,21 @@ contract PantheonInviteReward is Ownable{
   // claim
   function claimFromInvite() public returns (bool){
   	require(claimEnabled, "The claim is disable.");
-  	Idoer memory reward = rewardInfo[msg.sender];
+  	Reward memory reward = rewardInfo[msg.sender];
     
     // Get current reward info from Pool address
     uint timestamp = block.timestamp;
-    require(timestamp.sub(reward.lastClaimTime) >= MIN_CLAIM_TIMEOFF, "You claim too frequency.");
+    // require(timestamp.sub(reward.lastClaimTime) >= MIN_CLAIM_TIMEOFF, "You claim too frequency.");
     
     // Transfer
     PantheonPool poolContract = PantheonPool(poolAddress);
     uint totalReward = poolContract.inviteReward(msg.sender);
-    
     uint amount = totalReward.sub(reward.lastAmount);
   	require(amount >=100e18, "The reward is little than 100 pan.");
     require(token.balanceOf(address(this)) >= amount, "Reward pool has invalid balance.");
     
     token.transfer(msg.sender, amount);
 
-    // idoer.panValue = idoer.panValue.sub(value);
     reward.lastAmount = totalReward;
     reward.lastClaimTime = timestamp;
     rewardInfo[msg.sender] = reward;
@@ -96,11 +94,11 @@ contract PantheonInviteReward is Ownable{
   }
 
   function getClaimInfo(address user) public view returns(uint,uint) {
-    Reward reward = rewardInfo[user];
+    Reward memory reward = rewardInfo[user];
     PantheonPool poolContract = PantheonPool(poolAddress);
     uint totalReward = poolContract.inviteReward(user);
     uint amount = totalReward.sub(reward.lastAmount);
-    return (amount, currentAmount);
+    return (amount, totalReward);
   }
 
   function isClaimEnabled() public view returns(bool) {

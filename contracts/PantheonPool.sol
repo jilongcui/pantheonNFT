@@ -449,13 +449,16 @@ contract PantheonPool is Ownable,ERC721Holder {
                 }
             }
         } else {
-            level = 5;
-            if (power > 150000) {
-                level = 6;
-                if (power > 200000) {
-                    level =7;
-                    if (power > 300000)
-                        level = 8;
+            level = 4;
+            if (power >= 100000) {
+                level = 5;
+                if (power >= 150000) {
+                    level = 6;
+                    if (power >= 200000) {
+                        level =7;
+                        if (power >= 300000)
+                            level = 8;
+                    }
                 }
             }
         }

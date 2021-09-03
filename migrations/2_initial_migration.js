@@ -429,11 +429,11 @@ module.exports = async function(deployer, network, accounts) {
     await pool.addPool(117185, panToken.address, false, 90*24*1200, false);
 
     await pool.addPool(1000, panToken.address, true, 3*24*1200, false);
-    await pool.addPool(2500, panToken.address, true, 7*24*1200, false);
-    await pool.addPool(6250, panToken.address, true, 15*24*1200, false);
-    await pool.addPool(15625, panToken.address, true, 30*24*1200, false);
-    await pool.addPool(39062, panToken.address, true, 60*24*1200, false);
-    await pool.addPool(78125, panToken.address, true, 90*24*1200, false);
+    await pool.addPool(2500, panTokenAddress, true, 7*24*1200, false);
+    await pool.addPool(6250, panTokenAddress, true, 15*24*1200, false);
+    await pool.addPool(15625, panTokenAddress, true, 30*24*1200, false);
+    await pool.addPool(39062, panTokenAddress, true, 60*24*1200, false);
+    await pool.addPool(78125, panTokenAddress, true, 90*24*1200, false);
     
     console.log("115");
 
