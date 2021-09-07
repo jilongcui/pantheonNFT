@@ -89,6 +89,9 @@ contract PantheonPool is Ownable,ERC721Holder {
     IERC20 public usdtToken;
     // Dev address.
     address public devaddr;
+    address public blackholeAddress;
+    address public airdropAddress;
+    address public liquidAddress;
     // Block number when bonus CHA period ends.
     // uint256 public bonusEndBlock;
     // Total reward for miner
@@ -131,12 +134,18 @@ contract PantheonPool is Ownable,ERC721Holder {
         IERC20 _usdtAddress,
         IERC721Card _nftAddress,
         address beneficancy,
+        address _blackholeAddress,
+        address _airdropAddress,
+        address _liquidAddress,
         uint256 _chaPerBlock,
         uint256 _startBlock,
         uint256 _totalReward
     ) {
         panToken = _chaAddress;
         usdtToken = _usdtAddress;
+        blackholeAddress = _blackholeAddress;
+        airdropAddress = _airdropAddress;
+        liquidAddress = _liquidAddress;
         chaPerBlock = _chaPerBlock;
         // bonusEndBlock = _bonusEndBlock;
         startBlock = _startBlock;
@@ -581,7 +590,10 @@ contract PantheonPool is Ownable,ERC721Holder {
         if (_amount > chaBal) {
             _amount = chaBal;
         }
-        panToken.transfer(_to, _amount);
+        panToken.transfer(blackholeAddress, _amount.mul(5).div(100));
+        panToken.transfer(airdropAddress, _amount.mul(4).div(100));
+        panToken.transfer(liquidAddress, _amount.mul(4).div(100));
+        panToken.transfer(_to, _amount.sub(_amount.mul(13).div(100)));
         if(inviteForce)
            calculeInviteReward(_to, _amount);
     }

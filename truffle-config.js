@@ -1,5 +1,6 @@
-const HDWalletProvider = require('@truffle/hdwallet-provider');
+const HDWalletProvider = require('truffle-hdwallet-provider');
 const fs = require('fs');
+const Web3 = require('web3');
 const mnemonic = fs.readFileSync(".secret").toString().trim();
 
 module.exports = {
@@ -25,13 +26,27 @@ module.exports = {
     },
     bsc: {
       provider: () => new HDWalletProvider(mnemonic,
-	`https://bsc-dataseed1.binance.org`,
-	//`https://bsc-dataseed3.binance.org`,
-	address_index=27,//从给的mnemonic数组的第几下标开始取
-	num_addresses=29
+        new Web3.providers.HttpProvider(`https://bsc-dataseed.binance.org`, {
+        // new Web3.providers.HttpProvider(`https://black-frosty-smoke.bsc.quiknode.pro/2716dc3a83d20ec53b8bdf379dae75c68a39edcb/`, {
+          // clientConfig: {
+          //         maxReceivedFrameSize: 10000000,
+          //         maxReceivedMessageSize: 10000000,
+          // },
+          reconnect: {
+                  auto: true,
+                  delay: 5000,
+                  maxAttempts: 10,
+          },
+        }),
+      // `https://black-frosty-smoke.bsc.quiknode.pro/2716dc3a83d20ec53b8bdf379dae75c68a39edcb/`,
+      //`https://bsc-dataseed3.binance.org`,
+      address_index=28,//从给的mnemonic数组的第几下标开始取
+      num_addresses=29
 	),
       network_id: 56,
-      gas: 8500000, 
+      gas: 6500000, 
+      gasPrice: 5000000000,
+      networkCheckTimeout: 10000,
       confirmations: 5,
       timeoutBlocks: 1000,
       skipDryRun: true

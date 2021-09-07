@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import "../extensions/ERC20Burnable.sol";
 import "../../ERC721/utils/ERC721Holder.sol";
-import "../../ERC721/IERC721Card.sol";
+// import "../../ERC721/IERC721Card.sol";
+import "../../ERC721/presets/ERC721Card.sol";
 import "../../../access/Ownable.sol";
 import "../../../utils/math/SafeMath.sol";
 import "../../../utils/Address.sol";
@@ -243,7 +244,7 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
     address public immutable blackholeAddress;
     address public immutable airdropAddress;
     address public immutable liquidAddress;
-    IERC721Card public nftToken;
+    ERC721Card public nftToken;
     uint256 public initialSupply;
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = false;
@@ -283,13 +284,12 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
     // constructor (address pancakeRouter, address nftAddress_, address blackholeAddress_, address airdropAddress_)
     constructor(
         address pancakeRouter,
-        address nftAddress,
         address blackholeAddress_,
         address airdropAddress_,
         address liquidAddress_,
         uint256 _initialSupply,
         address owner
-    ) ERC20("PAN Token", "PAN") {
+    ) ERC20("PAN Token V2", "PAN") {
         
         blackholeAddress = blackholeAddress_;
         airdropAddress = airdropAddress_;
@@ -297,7 +297,7 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         initialSupply = _initialSupply * (10**decimals());
         
         uniswapV2Router = IUniswapV2Router02(pancakeRouter);
-        nftToken = IERC721Card(nftAddress);
+        nftToken = new ERC721Card(msg.sender, "Pantheon NFT V2", "PANNFT", "https://api.pantheon.best/tokens/");
 
         _isExcludedFromFee[msg.sender] = true;
         _isExcludedFromFee[address(this)] = true;
@@ -399,9 +399,13 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         } else {
             //transfer amount, it will take tax, burn, liquidity fee
             _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
-            _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
-            _transfer(msg.sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
-            _transfer(msg.sender, to, amount.sub(amount.mul(allTxFeeRate).div(100)));
+            if (msg.sender != uniswapV2Pair) {
+                _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
+                _transfer(msg.sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
+                _transfer(msg.sender, to, amount.sub(amount.mul(allTxFeeRate).div(100)));
+            } else {
+                _transfer(msg.sender, to, amount.sub(amount.mul(blackholeFeeRate).div(100)));
+            }
         }
         return true;
         
@@ -413,14 +417,14 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
         uint256 amount
     ) public virtual override returns (bool) {
         //if any account belongs to _isExcludedFromFee account then remove the fee
-        if(_isExcludedFromFee[msg.sender] || _isExcludedFromFee[recipient]){
-            _transfer(msg.sender, recipient, amount);
+        if(_isExcludedFromFee[sender] || _isExcludedFromFee[recipient]){
+            _transfer(sender, recipient, amount);
         } else {
             //transfer amount, it will take tax, burn, liquidity fee
-            _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
-            _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
-            _transfer(msg.sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
-            _transfer(msg.sender, recipient, amount.sub(amount.mul(allTxFeeRate).div(100)));
+            _transfer(sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
+            _transfer(sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
+            _transfer(sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
+            _transfer(sender, recipient, amount.sub(amount.mul(allTxFeeRate).div(100)));
         }
         _approve(sender, msg.sender, allowance(sender,msg.sender).sub(amount, "ERC20: transfer amount exceeds allowance"));
 
@@ -485,7 +489,7 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
 
     function setNFTToken(address nftAddress_) public onlyOwner{
         require(nftAddress_ != address(0));
-        nftToken = IERC721Card(nftAddress_);
+        nftToken = ERC721Card(nftAddress_);
     }
 
     function setExcludeFromFee(address account) public onlyOwner {

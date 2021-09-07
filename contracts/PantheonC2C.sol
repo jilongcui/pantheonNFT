@@ -43,6 +43,7 @@ contract PantheonC2C is Ownable, ERC721Holder{
   // NFTToken对象
   address nftAddress;
   IERC721 public nftToken;
+  address public beneficience;
 
   // 发布者
   address public chairperson;
@@ -51,19 +52,22 @@ contract PantheonC2C is Ownable, ERC721Holder{
   bool public c2cEnabled;
   // // 剩余供应
   uint public totalItem;
+  // C2C fee 
+  uint8 public c2cFee;
 
   // 新的IDO地址，用户领取状态
   mapping(uint => C2CItem) public c2cItems;
   // 构建函数，需要知道前一个地址，代币地址，受益者地址
   // ido 开始时间、结束时间、可以领取时间、领取结束时间
-  constructor(address nftAddress_, address tokenAddress_) {
+  constructor(address beneficience_, address nftAddress_, address tokenAddress_) {
   	chairperson = msg.sender;
   	// remainSupply = TOTAL_ETH_SUPPLY;
     c2cEnabled = true;
-
+    c2cFee = 4;
     nftAddress = nftAddress_;
   	nftToken = IERC721(nftAddress);
     tokenAddress = payable(tokenAddress_);
+    beneficience = beneficience_;
     token = IERC20(tokenAddress);
   }
   
@@ -122,7 +126,9 @@ contract PantheonC2C is Ownable, ERC721Holder{
     nftToken.safeTransferFrom(address(this), msg.sender, nftId);
     
     // 然后把用户转进来的代币，转移给卖家用户
-    token.transferFrom(msg.sender, c2cItem.author, value);
+    uint fee = value.mul(c2cFee).div(100);
+    token.transferFrom(msg.sender, c2cItem.author, value.sub(fee));
+    token.transferFrom(msg.sender, beneficience, fee);
 
     delete c2cItems[nftId];
     totalItem = totalItem.sub(1);
@@ -174,6 +180,10 @@ contract PantheonC2C is Ownable, ERC721Holder{
   function release() public  onlyOwner {
       payable(chairperson).transfer(address(this).balance);
       token.transfer(chairperson, token.balanceOf(address(this)));
+  }
+
+function setC2CFee(uint8 fee) public onlyOwner {
+    c2cFee = fee; //div 100
   }
 
   function setC2CEnable(bool enable) public onlyOwner {
