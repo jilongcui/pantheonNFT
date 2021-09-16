@@ -40,8 +40,8 @@ module.exports = {
         }),
       // `https://black-frosty-smoke.bsc.quiknode.pro/2716dc3a83d20ec53b8bdf379dae75c68a39edcb/`,
       //`https://bsc-dataseed3.binance.org`,
-      address_index=28,//从给的mnemonic数组的第几下标开始取
-      num_addresses=29
+      address_index=31, // 从给的mnemonic数组的第几下标开始取
+      num_addresses=3
 	),
       network_id: 56,
       gas: 6500000, 

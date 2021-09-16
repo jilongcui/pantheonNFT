@@ -325,30 +325,30 @@
     "absolutePath": "project:/contracts/token/ERC20/extensions/ERC20Pausable.sol",
     "exportedSymbols": {
       "Context": [
-        7810
+        15333
       ],
       "ERC20": [
-        1913
+        7574
       ],
       "ERC20Pausable": [
-        2321
+        7982
       ],
       "IERC20": [
-        1991
+        7652
       ],
       "IERC20Metadata": [
-        3485
+        9146
       ],
       "Pausable": [
-        1367
+        6925
       ]
     },
-    "id": 2322,
+    "id": 7983,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 2286,
+        "id": 7947,
         "literals": [
           "solidity",
           "^",
@@ -356,29 +356,29 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:11"
+        "src": "33:23:19"
       },
       {
         "absolutePath": "project:/contracts/token/ERC20/ERC20.sol",
         "file": "../ERC20.sol",
-        "id": 2287,
+        "id": 7948,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 2322,
-        "sourceUnit": 1914,
-        "src": "58:22:11",
+        "scope": 7983,
+        "sourceUnit": 7575,
+        "src": "58:22:19",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
         "absolutePath": "project:/contracts/security/Pausable.sol",
         "file": "../../../security/Pausable.sol",
-        "id": 2288,
+        "id": 7949,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 2322,
-        "sourceUnit": 1368,
-        "src": "81:40:11",
+        "scope": 7983,
+        "sourceUnit": 6926,
+        "src": "81:40:19",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -387,94 +387,94 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 2290,
+              "id": 7951,
               "name": "ERC20",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1913,
-              "src": "428:5:11"
+              "referencedDeclaration": 7574,
+              "src": "428:5:19"
             },
-            "id": 2291,
+            "id": 7952,
             "nodeType": "InheritanceSpecifier",
-            "src": "428:5:11"
+            "src": "428:5:19"
           },
           {
             "baseName": {
-              "id": 2292,
+              "id": 7953,
               "name": "Pausable",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1367,
-              "src": "435:8:11"
+              "referencedDeclaration": 6925,
+              "src": "435:8:19"
             },
-            "id": 2293,
+            "id": 7954,
             "nodeType": "InheritanceSpecifier",
-            "src": "435:8:11"
+            "src": "435:8:19"
           }
         ],
         "contractDependencies": [],
         "contractKind": "contract",
         "documentation": {
-          "id": 2289,
+          "id": 7950,
           "nodeType": "StructuredDocumentation",
-          "src": "123:269:11",
+          "src": "123:269:19",
           "text": " @dev ERC20 token with pausable token transfers, minting and burning.\n Useful for scenarios such as preventing trades until the end of an evaluation\n period, or having an emergency switch for freezing all token transfers in the\n event of a large bug."
         },
         "fullyImplemented": false,
-        "id": 2321,
+        "id": 7982,
         "linearizedBaseContracts": [
-          2321,
-          1367,
-          1913,
-          3485,
-          1991,
-          7810
+          7982,
+          6925,
+          7574,
+          9146,
+          7652,
+          15333
         ],
         "name": "ERC20Pausable",
-        "nameLocation": "411:13:11",
+        "nameLocation": "411:13:19",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "baseFunctions": [
-              1901
+              7562
             ],
             "body": {
-              "id": 2319,
+              "id": 7980,
               "nodeType": "Block",
-              "src": "717:136:11",
+              "src": "717:136:19",
               "statements": [
                 {
                   "expression": {
                     "arguments": [
                       {
-                        "id": 2307,
+                        "id": 7968,
                         "name": "from",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2296,
-                        "src": "754:4:11",
+                        "referencedDeclaration": 7957,
+                        "src": "754:4:19",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         }
                       },
                       {
-                        "id": 2308,
+                        "id": 7969,
                         "name": "to",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2298,
-                        "src": "760:2:11",
+                        "referencedDeclaration": 7959,
+                        "src": "760:2:19",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         }
                       },
                       {
-                        "id": 2309,
+                        "id": 7970,
                         "name": "amount",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2300,
-                        "src": "764:6:11",
+                        "referencedDeclaration": 7961,
+                        "src": "764:6:19",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -497,32 +497,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 2304,
+                        "id": 7965,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
                         "referencedDeclaration": 4294967271,
-                        "src": "727:5:11",
+                        "src": "727:5:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_super$_ERC20Pausable_$2321_$",
+                          "typeIdentifier": "t_type$_t_super$_ERC20Pausable_$7982_$",
                           "typeString": "type(contract super ERC20Pausable)"
                         }
                       },
-                      "id": 2306,
+                      "id": 7967,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "_beforeTokenTransfer",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 1901,
-                      "src": "727:26:11",
+                      "referencedDeclaration": 7562,
+                      "src": "727:26:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_nonpayable$_t_address_$_t_address_$_t_uint256_$returns$__$",
                         "typeString": "function (address,address,uint256)"
                       }
                     },
-                    "id": 2310,
+                    "id": 7971,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -530,22 +530,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "727:44:11",
+                    "src": "727:44:19",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 2311,
+                  "id": 7972,
                   "nodeType": "ExpressionStatement",
-                  "src": "727:44:11"
+                  "src": "727:44:19"
                 },
                 {
                   "expression": {
                     "arguments": [
                       {
-                        "id": 2315,
+                        "id": 7976,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -553,23 +553,23 @@
                         "nodeType": "UnaryOperation",
                         "operator": "!",
                         "prefix": true,
-                        "src": "790:9:11",
+                        "src": "790:9:19",
                         "subExpression": {
                           "arguments": [],
                           "expression": {
                             "argumentTypes": [],
-                            "id": 2313,
+                            "id": 7974,
                             "name": "paused",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1311,
-                            "src": "791:6:11",
+                            "referencedDeclaration": 6869,
+                            "src": "791:6:19",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_internal_view$__$returns$_t_bool_$",
                               "typeString": "function () view returns (bool)"
                             }
                           },
-                          "id": 2314,
+                          "id": 7975,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -577,7 +577,7 @@
                           "lValueRequested": false,
                           "names": [],
                           "nodeType": "FunctionCall",
-                          "src": "791:8:11",
+                          "src": "791:8:19",
                           "tryCall": false,
                           "typeDescriptions": {
                             "typeIdentifier": "t_bool",
@@ -591,14 +591,14 @@
                       },
                       {
                         "hexValue": "45524332305061757361626c653a20746f6b656e207472616e73666572207768696c6520706175736564",
-                        "id": 2316,
+                        "id": 7977,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "801:44:11",
+                        "src": "801:44:19",
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_fcb1fc9f3615fd38ab90d28b50a608758c295eeacbd5840421a4ee3b0df2f1f4",
                           "typeString": "literal_string \"ERC20Pausable: token transfer while paused\""
@@ -617,7 +617,7 @@
                           "typeString": "literal_string \"ERC20Pausable: token transfer while paused\""
                         }
                       ],
-                      "id": 2312,
+                      "id": 7973,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -625,13 +625,13 @@
                         4294967278
                       ],
                       "referencedDeclaration": 4294967278,
-                      "src": "782:7:11",
+                      "src": "782:7:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 2317,
+                    "id": 7978,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -639,51 +639,51 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "782:64:11",
+                    "src": "782:64:19",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 2318,
+                  "id": 7979,
                   "nodeType": "ExpressionStatement",
-                  "src": "782:64:11"
+                  "src": "782:64:19"
                 }
               ]
             },
             "documentation": {
-              "id": 2294,
+              "id": 7955,
               "nodeType": "StructuredDocumentation",
-              "src": "450:134:11",
+              "src": "450:134:19",
               "text": " @dev See {ERC20-_beforeTokenTransfer}.\n Requirements:\n - the contract must not be paused."
             },
-            "id": 2320,
+            "id": 7981,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "_beforeTokenTransfer",
-            "nameLocation": "598:20:11",
+            "nameLocation": "598:20:19",
             "nodeType": "FunctionDefinition",
             "overrides": {
-              "id": 2302,
+              "id": 7963,
               "nodeType": "OverrideSpecifier",
               "overrides": [],
-              "src": "708:8:11"
+              "src": "708:8:19"
             },
             "parameters": {
-              "id": 2301,
+              "id": 7962,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 2296,
+                  "id": 7957,
                   "mutability": "mutable",
                   "name": "from",
-                  "nameLocation": "636:4:11",
+                  "nameLocation": "636:4:19",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2320,
-                  "src": "628:12:11",
+                  "scope": 7981,
+                  "src": "628:12:19",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -691,10 +691,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 2295,
+                    "id": 7956,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "628:7:11",
+                    "src": "628:7:19",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -705,13 +705,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 2298,
+                  "id": 7959,
                   "mutability": "mutable",
                   "name": "to",
-                  "nameLocation": "658:2:11",
+                  "nameLocation": "658:2:19",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2320,
-                  "src": "650:10:11",
+                  "scope": 7981,
+                  "src": "650:10:19",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -719,10 +719,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 2297,
+                    "id": 7958,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "650:7:11",
+                    "src": "650:7:19",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -733,13 +733,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 2300,
+                  "id": 7961,
                   "mutability": "mutable",
                   "name": "amount",
-                  "nameLocation": "678:6:11",
+                  "nameLocation": "678:6:19",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2320,
-                  "src": "670:14:11",
+                  "scope": 7981,
+                  "src": "670:14:19",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -747,10 +747,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 2299,
+                    "id": 7960,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "670:7:11",
+                    "src": "670:7:19",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -759,56 +759,56 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "618:72:11"
+              "src": "618:72:19"
             },
             "returnParameters": {
-              "id": 2303,
+              "id": 7964,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "717:0:11"
+              "src": "717:0:19"
             },
-            "scope": 2321,
-            "src": "589:264:11",
+            "scope": 7982,
+            "src": "589:264:19",
             "stateMutability": "nonpayable",
             "virtual": true,
             "visibility": "internal"
           }
         ],
-        "scope": 2322,
-        "src": "393:462:11",
+        "scope": 7983,
+        "src": "393:462:19",
         "usedErrors": []
       }
     ],
-    "src": "33:823:11"
+    "src": "33:823:19"
   },
   "legacyAST": {
     "absolutePath": "project:/contracts/token/ERC20/extensions/ERC20Pausable.sol",
     "exportedSymbols": {
       "Context": [
-        7810
+        15333
       ],
       "ERC20": [
-        1913
+        7574
       ],
       "ERC20Pausable": [
-        2321
+        7982
       ],
       "IERC20": [
-        1991
+        7652
       ],
       "IERC20Metadata": [
-        3485
+        9146
       ],
       "Pausable": [
-        1367
+        6925
       ]
     },
-    "id": 2322,
+    "id": 7983,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 2286,
+        "id": 7947,
         "literals": [
           "solidity",
           "^",
@@ -816,29 +816,29 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "33:23:11"
+        "src": "33:23:19"
       },
       {
         "absolutePath": "project:/contracts/token/ERC20/ERC20.sol",
         "file": "../ERC20.sol",
-        "id": 2287,
+        "id": 7948,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 2322,
-        "sourceUnit": 1914,
-        "src": "58:22:11",
+        "scope": 7983,
+        "sourceUnit": 7575,
+        "src": "58:22:19",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
         "absolutePath": "project:/contracts/security/Pausable.sol",
         "file": "../../../security/Pausable.sol",
-        "id": 2288,
+        "id": 7949,
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
-        "scope": 2322,
-        "sourceUnit": 1368,
-        "src": "81:40:11",
+        "scope": 7983,
+        "sourceUnit": 6926,
+        "src": "81:40:19",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -847,94 +847,94 @@
         "baseContracts": [
           {
             "baseName": {
-              "id": 2290,
+              "id": 7951,
               "name": "ERC20",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1913,
-              "src": "428:5:11"
+              "referencedDeclaration": 7574,
+              "src": "428:5:19"
             },
-            "id": 2291,
+            "id": 7952,
             "nodeType": "InheritanceSpecifier",
-            "src": "428:5:11"
+            "src": "428:5:19"
           },
           {
             "baseName": {
-              "id": 2292,
+              "id": 7953,
               "name": "Pausable",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1367,
-              "src": "435:8:11"
+              "referencedDeclaration": 6925,
+              "src": "435:8:19"
             },
-            "id": 2293,
+            "id": 7954,
             "nodeType": "InheritanceSpecifier",
-            "src": "435:8:11"
+            "src": "435:8:19"
           }
         ],
         "contractDependencies": [],
         "contractKind": "contract",
         "documentation": {
-          "id": 2289,
+          "id": 7950,
           "nodeType": "StructuredDocumentation",
-          "src": "123:269:11",
+          "src": "123:269:19",
           "text": " @dev ERC20 token with pausable token transfers, minting and burning.\n Useful for scenarios such as preventing trades until the end of an evaluation\n period, or having an emergency switch for freezing all token transfers in the\n event of a large bug."
         },
         "fullyImplemented": false,
-        "id": 2321,
+        "id": 7982,
         "linearizedBaseContracts": [
-          2321,
-          1367,
-          1913,
-          3485,
-          1991,
-          7810
+          7982,
+          6925,
+          7574,
+          9146,
+          7652,
+          15333
         ],
         "name": "ERC20Pausable",
-        "nameLocation": "411:13:11",
+        "nameLocation": "411:13:19",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "baseFunctions": [
-              1901
+              7562
             ],
             "body": {
-              "id": 2319,
+              "id": 7980,
               "nodeType": "Block",
-              "src": "717:136:11",
+              "src": "717:136:19",
               "statements": [
                 {
                   "expression": {
                     "arguments": [
                       {
-                        "id": 2307,
+                        "id": 7968,
                         "name": "from",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2296,
-                        "src": "754:4:11",
+                        "referencedDeclaration": 7957,
+                        "src": "754:4:19",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         }
                       },
                       {
-                        "id": 2308,
+                        "id": 7969,
                         "name": "to",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2298,
-                        "src": "760:2:11",
+                        "referencedDeclaration": 7959,
+                        "src": "760:2:19",
                         "typeDescriptions": {
                           "typeIdentifier": "t_address",
                           "typeString": "address"
                         }
                       },
                       {
-                        "id": 2309,
+                        "id": 7970,
                         "name": "amount",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 2300,
-                        "src": "764:6:11",
+                        "referencedDeclaration": 7961,
+                        "src": "764:6:19",
                         "typeDescriptions": {
                           "typeIdentifier": "t_uint256",
                           "typeString": "uint256"
@@ -957,32 +957,32 @@
                         }
                       ],
                       "expression": {
-                        "id": 2304,
+                        "id": 7965,
                         "name": "super",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
                         "referencedDeclaration": 4294967271,
-                        "src": "727:5:11",
+                        "src": "727:5:19",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_super$_ERC20Pausable_$2321_$",
+                          "typeIdentifier": "t_type$_t_super$_ERC20Pausable_$7982_$",
                           "typeString": "type(contract super ERC20Pausable)"
                         }
                       },
-                      "id": 2306,
+                      "id": 7967,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "_beforeTokenTransfer",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 1901,
-                      "src": "727:26:11",
+                      "referencedDeclaration": 7562,
+                      "src": "727:26:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_internal_nonpayable$_t_address_$_t_address_$_t_uint256_$returns$__$",
                         "typeString": "function (address,address,uint256)"
                       }
                     },
-                    "id": 2310,
+                    "id": 7971,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -990,22 +990,22 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "727:44:11",
+                    "src": "727:44:19",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 2311,
+                  "id": 7972,
                   "nodeType": "ExpressionStatement",
-                  "src": "727:44:11"
+                  "src": "727:44:19"
                 },
                 {
                   "expression": {
                     "arguments": [
                       {
-                        "id": 2315,
+                        "id": 7976,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -1013,23 +1013,23 @@
                         "nodeType": "UnaryOperation",
                         "operator": "!",
                         "prefix": true,
-                        "src": "790:9:11",
+                        "src": "790:9:19",
                         "subExpression": {
                           "arguments": [],
                           "expression": {
                             "argumentTypes": [],
-                            "id": 2313,
+                            "id": 7974,
                             "name": "paused",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 1311,
-                            "src": "791:6:11",
+                            "referencedDeclaration": 6869,
+                            "src": "791:6:19",
                             "typeDescriptions": {
                               "typeIdentifier": "t_function_internal_view$__$returns$_t_bool_$",
                               "typeString": "function () view returns (bool)"
                             }
                           },
-                          "id": 2314,
+                          "id": 7975,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -1037,7 +1037,7 @@
                           "lValueRequested": false,
                           "names": [],
                           "nodeType": "FunctionCall",
-                          "src": "791:8:11",
+                          "src": "791:8:19",
                           "tryCall": false,
                           "typeDescriptions": {
                             "typeIdentifier": "t_bool",
@@ -1051,14 +1051,14 @@
                       },
                       {
                         "hexValue": "45524332305061757361626c653a20746f6b656e207472616e73666572207768696c6520706175736564",
-                        "id": 2316,
+                        "id": 7977,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": true,
                         "kind": "string",
                         "lValueRequested": false,
                         "nodeType": "Literal",
-                        "src": "801:44:11",
+                        "src": "801:44:19",
                         "typeDescriptions": {
                           "typeIdentifier": "t_stringliteral_fcb1fc9f3615fd38ab90d28b50a608758c295eeacbd5840421a4ee3b0df2f1f4",
                           "typeString": "literal_string \"ERC20Pausable: token transfer while paused\""
@@ -1077,7 +1077,7 @@
                           "typeString": "literal_string \"ERC20Pausable: token transfer while paused\""
                         }
                       ],
-                      "id": 2312,
+                      "id": 7973,
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
@@ -1085,13 +1085,13 @@
                         4294967278
                       ],
                       "referencedDeclaration": 4294967278,
-                      "src": "782:7:11",
+                      "src": "782:7:19",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$_t_string_memory_ptr_$returns$__$",
                         "typeString": "function (bool,string memory) pure"
                       }
                     },
-                    "id": 2317,
+                    "id": 7978,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -1099,51 +1099,51 @@
                     "lValueRequested": false,
                     "names": [],
                     "nodeType": "FunctionCall",
-                    "src": "782:64:11",
+                    "src": "782:64:19",
                     "tryCall": false,
                     "typeDescriptions": {
                       "typeIdentifier": "t_tuple$__$",
                       "typeString": "tuple()"
                     }
                   },
-                  "id": 2318,
+                  "id": 7979,
                   "nodeType": "ExpressionStatement",
-                  "src": "782:64:11"
+                  "src": "782:64:19"
                 }
               ]
             },
             "documentation": {
-              "id": 2294,
+              "id": 7955,
               "nodeType": "StructuredDocumentation",
-              "src": "450:134:11",
+              "src": "450:134:19",
               "text": " @dev See {ERC20-_beforeTokenTransfer}.\n Requirements:\n - the contract must not be paused."
             },
-            "id": 2320,
+            "id": 7981,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "_beforeTokenTransfer",
-            "nameLocation": "598:20:11",
+            "nameLocation": "598:20:19",
             "nodeType": "FunctionDefinition",
             "overrides": {
-              "id": 2302,
+              "id": 7963,
               "nodeType": "OverrideSpecifier",
               "overrides": [],
-              "src": "708:8:11"
+              "src": "708:8:19"
             },
             "parameters": {
-              "id": 2301,
+              "id": 7962,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 2296,
+                  "id": 7957,
                   "mutability": "mutable",
                   "name": "from",
-                  "nameLocation": "636:4:11",
+                  "nameLocation": "636:4:19",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2320,
-                  "src": "628:12:11",
+                  "scope": 7981,
+                  "src": "628:12:19",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1151,10 +1151,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 2295,
+                    "id": 7956,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "628:7:11",
+                    "src": "628:7:19",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1165,13 +1165,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 2298,
+                  "id": 7959,
                   "mutability": "mutable",
                   "name": "to",
-                  "nameLocation": "658:2:11",
+                  "nameLocation": "658:2:19",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2320,
-                  "src": "650:10:11",
+                  "scope": 7981,
+                  "src": "650:10:19",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1179,10 +1179,10 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 2297,
+                    "id": 7958,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "650:7:11",
+                    "src": "650:7:19",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
@@ -1193,13 +1193,13 @@
                 },
                 {
                   "constant": false,
-                  "id": 2300,
+                  "id": 7961,
                   "mutability": "mutable",
                   "name": "amount",
-                  "nameLocation": "678:6:11",
+                  "nameLocation": "678:6:19",
                   "nodeType": "VariableDeclaration",
-                  "scope": 2320,
-                  "src": "670:14:11",
+                  "scope": 7981,
+                  "src": "670:14:19",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -1207,10 +1207,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 2299,
+                    "id": 7960,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "670:7:11",
+                    "src": "670:7:19",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -1219,35 +1219,35 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "618:72:11"
+              "src": "618:72:19"
             },
             "returnParameters": {
-              "id": 2303,
+              "id": 7964,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "717:0:11"
+              "src": "717:0:19"
             },
-            "scope": 2321,
-            "src": "589:264:11",
+            "scope": 7982,
+            "src": "589:264:19",
             "stateMutability": "nonpayable",
             "virtual": true,
             "visibility": "internal"
           }
         ],
-        "scope": 2322,
-        "src": "393:462:11",
+        "scope": 7983,
+        "src": "393:462:19",
         "usedErrors": []
       }
     ],
-    "src": "33:823:11"
+    "src": "33:823:19"
   },
   "compiler": {
     "name": "solc",
     "version": "0.8.6+commit.11564f7e.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.2",
-  "updatedAt": "2021-09-07T04:17:38.201Z",
+  "schemaVersion": "3.4.3",
+  "updatedAt": "2021-09-16T04:09:03.497Z",
   "devdoc": {
     "details": "ERC20 token with pausable token transfers, minting and burning. Useful for scenarios such as preventing trades until the end of an evaluation period, or having an emergency switch for freezing all token transfers in the event of a large bug.",
     "kind": "dev",

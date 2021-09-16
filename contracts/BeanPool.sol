@@ -24,14 +24,14 @@ interface IMigratorChef {
     function migrate(IERC20 token) external returns (IERC20);
 }
 
-// PantheonPool is the master of Reward. He can make Reward and he is a fair guy.
+// BeanPool is the master of Reward. He can make Reward and he is a fair guy.
 //
 // Note that it's ownable and the owner wields tremendous power. The ownership
 // will be transferred to a governance smart contract once CHA is sufficiently
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
-contract PantheonPool is Ownable,ERC721Holder {
+contract BeanPool is Ownable,ERC721Holder {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     // Info of each user.
@@ -69,6 +69,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     // Info of each pool. pool is set manully.
     struct PoolInfo {
         IERC20 lpToken; // Address of LP token contract.
+        IERC20 lpToken2; // Address of LP token contract.
         bool isLp; // if isLp is true we should have a usdt token.
         uint32 timeBlocks; // timeBlocks;
         uint256 powerRate; // The power rate assigned to this pool. times 1000.
@@ -79,19 +80,18 @@ contract PantheonPool is Ownable,ERC721Holder {
     uint256 public accChaPerShare; // Accumulated CHAs per share, times 1e12. See below.
     // Total power
     uint256 public totalPower;
-    uint16[] public nftRate = [100, 150, 300, 600, 1500]; // times 1000
+    uint16[] public nftRate = [1000, 2000, 3000]; // times 1000
 
     // Invite
     bool public inviteForce = false;
-    uint8 public maxInviteLayer = 10;
+    uint8 public maxInviteLayer = 5;
     // The CHA TOKEN!
     IERC20 public panToken;
-    IERC20 public usdtToken;
     // Dev address.
     address public devaddr;
     address public blackholeAddress;
     address public airdropAddress;
-    address public liquidAddress;
+    // address public liquidAddress;
     // Block number when bonus CHA period ends.
     // uint256 public bonusEndBlock;
     // Total reward for miner
@@ -112,7 +112,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     mapping(address => uint8) public userLevel;
     mapping(address => uint256) public inviteReward;
     // mapping(uint8 => mapping(uint8 => uint8)) memory inviteRatio;
-    uint8[][] inviteRatio = [[5,0,0,0,0,0,0,0,0,0],[8,5,0,0,0,0,0,0,0,0],[10,6,4,2,0,0,0,0,0,0],[12,8,6,4,2,2,0,0,0,0],[14,10,8,6,4,2,2,2,0,0],[16,12,10,8,6,4,2,2,2,2],[18,14,12,10,8,6,4,2,2,2],[20,16,14,12,10,8,6,4,2,2],[22,18,16,14,12,10,8,6,4,2]];
+    uint8[][] inviteRatio = [[0,0,0,0,0],[15,12,0,0,0],[20,15,10,0,0],[22,18,16,14,12]];
     mapping(uint256 => mapping(address => MinerInfo)) public minerInfo;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
@@ -131,21 +131,19 @@ contract PantheonPool is Ownable,ERC721Holder {
 
     constructor(
         IERC20 _chaAddress,
-        IERC20 _usdtAddress,
         IERC721Card _nftAddress,
-        address beneficancy,
+        address initInviteAddress,
         address _blackholeAddress,
         address _airdropAddress,
-        address _liquidAddress,
+        // address _liquidAddress,
         uint256 _chaPerBlock,
         uint256 _startBlock,
         uint256 _totalReward
     ) {
         panToken = _chaAddress;
-        usdtToken = _usdtAddress;
         blackholeAddress = _blackholeAddress;
         airdropAddress = _airdropAddress;
-        liquidAddress = _liquidAddress;
+        // liquidAddress = _liquidAddress;
         chaPerBlock = _chaPerBlock;
         // bonusEndBlock = _bonusEndBlock;
         startBlock = _startBlock;
@@ -154,7 +152,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         lastRewardBlock =
             block.number > startBlock ? block.number : startBlock;
         // totalAllocPoint = totalAllocPoint.add(_allocPoint);
-        userParent[msg.sender] = beneficancy;
+        userParent[initInviteAddress] = msg.sender;
         totalPower = 0;
     }
 
@@ -183,6 +181,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     function addPool(
         uint256 _powerRate,
         IERC20 _token,
+        IERC20 _token2,
         bool _isLp,
         uint32 timeBlocks,
         bool _withUpdate
@@ -194,6 +193,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         poolInfo.push(
             PoolInfo({
                 lpToken: _token,
+                lpToken2: _token2,
                 isLp: _isLp,
                 timeBlocks: timeBlocks,
                 powerRate: _powerRate
@@ -216,11 +216,10 @@ contract PantheonPool is Ownable,ERC721Holder {
     function setInvite(
         address parent
     ) public {
+        require(userParent[msg.sender] == address(0), "You already be invited.");
         require(userParent[parent] != address(0), "Parent should be invite first.");
-        require(parent != msg.sender, "Parent should not be itself.");
-        if (userParent[msg.sender] == address(0)) {
-            userParent[msg.sender] = parent;
-        }
+        require(parent != msg.sender, "You cannot invite yourself.");
+        userParent[msg.sender] = parent;
     }
 
     function setInviteEnable(
@@ -332,7 +331,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     }
 
 
-    // Deposit LP tokens to PantheonPool for CHA allocation.
+    // Deposit LP tokens to BeanPool for CHA allocation.
     function deposit(uint256 _pid, uint256 _amount) public returns (bool){
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo memory miner = minerInfo[_pid][msg.sender];
@@ -354,8 +353,7 @@ contract PantheonPool is Ownable,ERC721Holder {
             _amount
         );
         if (pool.isLp) {
-            // usdtToken.safeApprove(address(this), _amount.mul(1e12).div(4));
-            usdtToken.safeTransferFrom(
+            pool.lpToken2.safeTransferFrom(
                 address(msg.sender),
                 address(this),
                 _amount.div(4)
@@ -375,7 +373,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         return true;
     }
 
-    // Deposit LP tokens to PantheonPool for CHA allocation.
+    // Deposit LP tokens to BeanPool for CHA allocation.
     function depositWithNFT(uint256 _pid, uint256 _amount, uint16 nft1, uint16 nft2, uint16 nft3) public {
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo memory miner = minerInfo[_pid][msg.sender];
@@ -394,7 +392,7 @@ contract PantheonPool is Ownable,ERC721Holder {
             _amount
         );
         if (pool.isLp) {
-            usdtToken.transferFrom(
+            pool.lpToken2.transferFrom(
                 address(msg.sender),
                 address(this),
                 _amount.div(4)
@@ -421,14 +419,8 @@ contract PantheonPool is Ownable,ERC721Holder {
             nftToken.safeTransferFrom(msg.sender, address(this), nft3);
         }
         // 同级别三张，有彩蛋
-        if(level == level2 && level2 == level3 && random() < 10) {
-            if (level == 2 ) {
-                rate = rate * 13 / 10;
-            } else if (level==3) {
-                rate = rate * 15 / 10;
-            } else if (level == 4) {
-                rate = rate * 20 / 10;
-            }
+        if(level == 2 && level == level2 && level2 == level3) {
+            rate = rate + 15000;
         }
         uint256 power = _amount.mul(rate).div(1000);
         miner.power = miner.power.add(power);
@@ -447,28 +439,11 @@ contract PantheonPool is Ownable,ERC721Holder {
     function getUserLevel(uint256 power) private pure returns(uint8){
         uint8 level;
         power = power.div(1e18);
-        if (power < 50000) {
-            level = 3;
-            if (power < 30000) {
+        level = 0;
+        if (power >= 1000) {
+            level = 1;
+            if (power >= 2000) {
                 level = 2;
-                if(power <10000) {
-                    level = 1;
-                    if (power < 5000)
-                        level = 0;
-                }
-            }
-        } else {
-            level = 4;
-            if (power >= 100000) {
-                level = 5;
-                if (power >= 150000) {
-                    level = 6;
-                    if (power >= 200000) {
-                        level =7;
-                        if (power >= 300000)
-                            level = 8;
-                    }
-                }
             }
         }
         return level;
@@ -478,7 +453,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     function random() private view returns (uint8) {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty)))%100);
     }
-    // harvest LP tokens from PantheonPool.
+    // harvest LP tokens from BeanPool.
     function harvest(uint256 _pid) public {
         // PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
@@ -493,11 +468,11 @@ contract PantheonPool is Ownable,ERC721Holder {
         emit Harvest(msg.sender, _pid, pending);
     }
 
-    // Withdraw LP tokens from PantheonPool.
+    // Withdraw LP tokens from BeanPool.
     function withdraw(uint256 _pid, uint256 _amount) public {
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
-        require(miner.amount > _amount, "withdraw: not good");
+        require(miner.amount >= _amount, "withdraw: not good");
         require(accChaPerShare > 0, "accChaPerShare should not be zero");
         require(miner.endBlock <= block.number, "Cannot withdraw with days limit.");
         updateReward();
@@ -509,7 +484,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         }
         
         if (pool.isLp) {
-            usdtToken.transfer(
+            pool.lpToken2.transfer(
                 msg.sender,
                 miner.amount.div(4) // div(1e6).mul(1e8) equ mul(1e12)
             );
@@ -550,7 +525,7 @@ contract PantheonPool is Ownable,ERC721Holder {
 
         for(uint8 layer=0; layer< maxInviteLayer; layer++) {
             address parent = userParent[child];
-            if (parent == address(0) && parent == child)
+            if (parent == address(0) || parent == child)
                 return;
             uint8 level = userLevel[parent];
             uint8 ratio = inviteRatio[level][layer];
@@ -570,7 +545,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         require(miner.endBlock < block.number, "Cannot withdraw with days limit.");
         pool.lpToken.safeTransfer(address(msg.sender), miner.amount);
         if (pool.isLp) {
-            usdtToken.transfer(
+            pool.lpToken2.transfer(
                 msg.sender,
                 miner.amount.div(4) // div(1e6).mul(1e8) equ mul(1e12)
             );
@@ -590,10 +565,10 @@ contract PantheonPool is Ownable,ERC721Holder {
         if (_amount > chaBal) {
             _amount = chaBal;
         }
-        panToken.transfer(blackholeAddress, _amount.mul(5).div(100));
-        panToken.transfer(airdropAddress, _amount.mul(4).div(100));
-        panToken.transfer(liquidAddress, _amount.mul(4).div(100));
-        panToken.transfer(_to, _amount.sub(_amount.mul(13).div(100)));
+        panToken.transfer(blackholeAddress, _amount.mul(2).div(100));
+        panToken.transfer(airdropAddress, _amount.mul(10).div(100));
+        // panToken.transfer(liquidAddress, _amount.mul(4).div(100));
+        panToken.transfer(_to, _amount.sub(_amount.mul(12).div(100)));
         if(inviteForce)
            calculeInviteReward(_to, _amount);
     }

@@ -9,7 +9,7 @@ import "./token/ERC721/utils/ERC721Holder.sol";
 pragma solidity ^0.8.0;
 // SPDX-License-Identifier: MIT
 
-contract PantheonC2C is Ownable, ERC721Holder{
+contract BeanC2C is Ownable, ERC721Holder{
 
   uint MIN_DEPOSITE = 1*10**6; // 1PAN
   uint MAX_DEPOSITE_ETH = 0.2 ether; //10

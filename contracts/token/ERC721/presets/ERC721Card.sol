@@ -74,11 +74,9 @@ contract ERC721Card is
     }
 
     function setLevelInfo() internal {
-        levelInfo[0] = LevelInfo({total:64000, power:100, current:0});
-        levelInfo[1] = LevelInfo({total:18000, power:150, current:0});
-        levelInfo[2] = LevelInfo({total:1800, power:300, current:0});
-        levelInfo[3] = LevelInfo({total:900, power:600, current:0});
-        levelInfo[4] = LevelInfo({total:300, power:1500, current:0});
+        levelInfo[0] = LevelInfo({total:250, power:1000, current:0});
+        levelInfo[1] = LevelInfo({total:150, power:2000, current:0});
+        levelInfo[2] = LevelInfo({total:100, power:3000, current:0});
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
