@@ -15,6 +15,7 @@ contract BeanInviteReward is Ownable{
 
   struct Reward {
     uint lastAmount;
+    uint extraReward;
     uint lastClaimTime;
   }
 
@@ -62,6 +63,12 @@ contract BeanInviteReward is Ownable{
   function setClaimEnabled(bool enable) public onlyOwner {
     claimEnabled = enable;
   }
+
+  function setExtraReward(address user, uint amount) public onlyOwner {
+    Reward memory reward = rewardInfo[user];
+    reward.extraReward += amount;
+    rewardInfo[user] = reward;
+  }
   
   function release() public  onlyOwner {
       token.transfer(chairperson, token.balanceOf(address(this)));
@@ -81,12 +88,12 @@ contract BeanInviteReward is Ownable{
     BeanPool poolContract = BeanPool(poolAddress);
     uint totalReward = poolContract.inviteReward(msg.sender);
     uint amount = totalReward.sub(reward.lastAmount);
+    amount = amount.add(reward.extraReward);
   	require(amount >=100e18, "The reward is little than 100 pan.");
     require(token.balanceOf(address(this)) >= amount, "Reward pool has invalid balance.");
-    
     token.transfer(msg.sender, amount);
-
     reward.lastAmount = totalReward;
+    reward.extraReward = 0;
     reward.lastClaimTime = timestamp;
     rewardInfo[msg.sender] = reward;
     emit RewardClaimedEvent(amount, totalReward, timestamp);
@@ -98,6 +105,7 @@ contract BeanInviteReward is Ownable{
     BeanPool poolContract = BeanPool(poolAddress);
     uint totalReward = poolContract.inviteReward(user);
     uint amount = totalReward.sub(reward.lastAmount);
+    amount = amount.add(reward.extraReward);
     return (amount, totalReward);
   }
 
