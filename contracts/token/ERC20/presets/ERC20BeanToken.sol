@@ -8,6 +8,9 @@ import "../../ERC721/presets/ERC721Card.sol";
 import "../../../access/Ownable.sol";
 import "../../../utils/math/SafeMath.sol";
 import "../../../utils/Address.sol";
+import '../../../interfaces/IUniswapV2Factory.sol';
+import '../../../interfaces/IUniswapV2Pair.sol';
+// import '../utils/BetaOracleUniswapV2.sol';
 
 /**
  * @dev {ERC20} token, including:
@@ -21,80 +24,6 @@ import "../../../utils/Address.sol";
  *
  * _Available since v3.4._
  */
-
- // pragma solidity >=0.5.0;
-
-interface IUniswapV2Factory {
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint);
-
-    function feeTo() external view returns (address);
-    function feeToSetter() external view returns (address);
-
-    function getPair(address tokenA, address tokenB) external view returns (address pair);
-    function allPairs(uint) external view returns (address pair);
-    function allPairsLength() external view returns (uint);
-
-    function createPair(address tokenA, address tokenB) external returns (address pair);
-
-    function setFeeTo(address) external;
-    function setFeeToSetter(address) external;
-}
-
-
-// pragma solidity >=0.5.0;
-
-interface IUniswapV2Pair {
-    event Approval(address indexed owner, address indexed spender, uint value);
-    event Transfer(address indexed from, address indexed to, uint value);
-
-    function name() external pure returns (string memory);
-    function symbol() external pure returns (string memory);
-    function decimals() external pure returns (uint8);
-    function totalSupply() external view returns (uint);
-    function balanceOf(address owner) external view returns (uint);
-    function allowance(address owner, address spender) external view returns (uint);
-
-    function approve(address spender, uint value) external returns (bool);
-    function transfer(address to, uint value) external returns (bool);
-    function transferFrom(address from, address to, uint value) external returns (bool);
-
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-    function PERMIT_TYPEHASH() external pure returns (bytes32);
-    function nonces(address owner) external view returns (uint);
-
-    function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external;
-
-    event Mint(address indexed sender, uint amount0, uint amount1);
-    event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
-    event Swap(
-        address indexed sender,
-        uint amount0In,
-        uint amount1In,
-        uint amount0Out,
-        uint amount1Out,
-        address indexed to
-    );
-    event Sync(uint112 reserve0, uint112 reserve1);
-
-    function MINIMUM_LIQUIDITY() external pure returns (uint);
-    function factory() external view returns (address);
-    function token0() external view returns (address);
-    function token1() external view returns (address);
-    function getReserves() external view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast);
-    function price0CumulativeLast() external view returns (uint);
-    function price1CumulativeLast() external view returns (uint);
-    function kLast() external view returns (uint);
-
-    function mint(address to) external returns (uint liquidity);
-    function burn(address to) external returns (uint amount0, uint amount1);
-    function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
-    function skim(address to) external;
-    function sync() external;
-
-    function initialize(address, address) external;
-}
-
-// pragma solidity >=0.6.2;
 
 interface IUniswapV2Router01 {
     function factory() external pure returns (address);
@@ -239,6 +168,7 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
     using SafeMath for uint256;
     using Address for address;
     IUniswapV2Router02 public immutable uniswapV2Router;
+    // BetaOracleUniswapV2 oracleUniswap;
     // address public immutable uniswapV2Pair;
     address public uniswapV2Pair;
     address public immutable blackholeAddress;
@@ -248,6 +178,9 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
     uint256 public initialSupply;
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = false;
+    uint256 level1EthValue;
+    uint256 level2EthValue;
+    uint256 level3EthValue;
 
     // Fee
     uint256 private blackholeFeeRate = 2;
@@ -295,6 +228,9 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         airdropAddress = airdropAddress_;
         // liquidAddress = liquidAddress_;
         initialSupply = _initialSupply * (10**decimals());
+        level1EthValue = 0.001e18;
+        level2EthValue = 0.003e18;
+        level3EthValue = 0.006e18;
         
         uniswapV2Router = IUniswapV2Router02(pancakeRouter);
         nftToken = new ERC721Card(msg.sender, "MagicBeanXXX NFT", "BEANXNFT", "https://api.magicbean.cc/tokens/");
@@ -313,7 +249,6 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty)))%1000);
     }
 
-
     function transfer(
         address to,
         uint256 amount
@@ -324,17 +259,25 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         
         uint8 level = 0;
         bool isLucky = false;
-            // rand = nftToken.balanceOf(to)>5 ? rand * 3 /2 : rand;
+        // rand = nftToken.balanceOf(to)>5 ? rand * 3 /2 : rand;
+        // oracleUniswap.updatePriceFromPair(address(this));
         if (msg.sender == uniswapV2Pair) {
-            if ( amount >= 30000e18){ // 30000BEAN
+            IUniswapV2Pair pair = IUniswapV2Pair(uniswapV2Pair);
+            uint112 reserve0;
+            uint112 reserve1;
+            // uint32  timeBlock;
+            (reserve0, reserve1, ) = pair.getReserves();
+            // uint256 ethAmount = oracleUniswap.getAssetETHValue(address(this), amount);
+            uint256 ethAmount = uniswapV2Router.quote(amount, reserve0, reserve1);
+            if ( ethAmount >= level3EthValue){ // 3000U, 6BNB
                 isLucky = true;
                 level = 2;
             } else
-            if ( amount >= 15000e18){ // 15000BEAN
+            if ( ethAmount >= level2EthValue){ // 1500U, 3BNB
                 isLucky = true;
                 level = 1;
             } else
-            if (amount >= 5000e18) { // 5000BEAN
+            if (ethAmount >= level1EthValue) { // 500U, 1BNB
                 isLucky = true;
                 level = 0;
             } 
@@ -345,16 +288,14 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         //if any account belongs to _isExcludedFromFee account then remove the fee
         if(_isExcludedFromFee[msg.sender] || _isExcludedFromFee[to]){
             _transfer(msg.sender, to, amount);
-        } else {
-            //transfer amount, it will take tax, burn, liquidity fee
+        } else if (msg.sender != uniswapV2Pair) {
             _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
-            if (msg.sender != uniswapV2Pair) {
-                _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
-                // _transfer(msg.sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
-                _transfer(msg.sender, to, amount.sub(amount.mul(allTxFeeRate).div(100)));
-            } else {
-                _transfer(msg.sender, to, amount.sub(amount.mul(blackholeFeeRate).div(100)));
-            }
+            _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
+            // _transfer(msg.sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
+            _transfer(msg.sender, to, amount.sub(amount.mul(allTxFeeRate).div(100)));
+        } else {
+            _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
+            _transfer(msg.sender, to, amount.sub(amount.mul(blackholeFeeRate).div(100)));
         }
         return true;
         
@@ -366,6 +307,7 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         uint256 amount
     ) public virtual override returns (bool) {
         //if any account belongs to _isExcludedFromFee account then remove the fee
+        // oracleUniswap.updatePriceFromPair(address(this));
         if(_isExcludedFromFee[sender] || _isExcludedFromFee[recipient]){
             _transfer(sender, recipient, amount);
         } else {
@@ -457,6 +399,16 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         return _isExcludedFromFee[account];
     }
 
+    function getEthValue(uint256 amount) public view returns(uint256) {
+        IUniswapV2Pair pair = IUniswapV2Pair(uniswapV2Pair);
+        uint112 reserve0;
+        uint112 reserve1;
+        // uint32  timeBlock;
+        (reserve0, reserve1, ) = pair.getReserves();
+        // uint256 ethAmount = oracleUniswap.getAssetETHValue(address(this), amount);
+        return uniswapV2Router.quote(amount, reserve0, reserve1);
+    }
+
     // function setLuckyBonusFeePercent(uint256 luckyBonusFee) external onlyOwner() {
     //     _luckyBonusFee = luckyBonusFee;
     // }
@@ -467,6 +419,12 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
 
     function setAirdropFeePercent(uint256 airdropFee) external onlyOwner() {
         airdropFeeRate = airdropFee;
+    }
+
+    function setNftLevelEthValue(uint256 level1, uint256 level2, uint256 level3) external onlyOwner(){
+        level1EthValue = level1;
+        level2EthValue = level2;
+        level3EthValue = level3;
     }
     
     // function setLiquidityFeePercent(uint256 liquidityFee) external onlyOwner() {
@@ -483,6 +441,8 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
             uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory())
               .createPair(address(this), uniswapV2Router.WETH());
             _isExcludedFromFee[uniswapV2Pair] = true;
+            // oracleUniswap = new BetaOracleUniswapV2(uniswapV2Router.WETH(), uniswapV2Router.factory(), 3);
+            // oracleUniswap.initPriceFromPair(address(this));
         }
         swapAndLiquifyEnabled = enabled;
         emit SwapAndLiquifyEnabledUpdated(enabled);

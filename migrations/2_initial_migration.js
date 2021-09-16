@@ -414,6 +414,7 @@ module.exports = async function(deployer, network, accounts) {
     let erc721Address = await beanToken.nftToken();
     console.log(erc721Address);
     await deployer.deploy(BeanC2C, beneficancy, erc721Address, BUSDT); // USDT for buy NFT
+    let c2c = await BeanC2C.deployed();
     let inviteAddress = "0x81a4e00Fa65944b2BDB9F48f3619Fa0561C59eb9";
     let panTokenAddress = "0x1f6fD0b74A173f112F8aAa2BeD78d45239c08B26";
     chaPerBlock = web3.utils.toWei("0.086805556"); // 2500/24/1200
@@ -535,6 +536,7 @@ module.exports = async function(deployer, network, accounts) {
     let erc721Address = await beanToken.nftToken();
     console.log(erc721Address);
     await deployer.deploy(BeanC2C, beneficancy, erc721Address, BUSDT); // USDT for buy NFT
+    let c2c = await BeanC2C.deployed();
     let inviteAddress = "0x81a4e00Fa65944b2BDB9F48f3619Fa0561C59eb9";
     let panTokenAddress = "0x1f6fD0b74A173f112F8aAa2BeD78d45239c08B26";
     chaPerBlock = web3.utils.toWei("0.086805556"); // 2500/24/1200
