@@ -489,7 +489,7 @@ contract BeanPool is Ownable,ERC721Holder {
         if (pool.isLp) {
             pool.lpToken2.transfer(
                 msg.sender,
-                _amount.mul(pool.amountRate).div(1000)
+                miner.amount.mul(pool.amountRate).div(1000)
             );
         }
 
