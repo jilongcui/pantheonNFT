@@ -72,6 +72,7 @@ contract BeanPool is Ownable,ERC721Holder {
         IERC20 lpToken2; // Address of LP token contract.
         bool isLp; // if isLp is true we should have a usdt token.
         uint32 timeBlocks; // timeBlocks;
+        uint32 amountRate; // The amount rate for token 2, times 1000.
         uint256 powerRate; // The power rate assigned to this pool. times 1000.
     }
     
@@ -180,6 +181,7 @@ contract BeanPool is Ownable,ERC721Holder {
     // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
     function addPool(
         uint256 _powerRate,
+        uint32 _amountRate,
         IERC20 _token,
         IERC20 _token2,
         bool _isLp,
@@ -196,7 +198,8 @@ contract BeanPool is Ownable,ERC721Holder {
                 lpToken2: _token2,
                 isLp: _isLp,
                 timeBlocks: timeBlocks,
-                powerRate: _powerRate
+                powerRate: _powerRate,
+                amountRate: _amountRate
             })
         );
     }
@@ -356,7 +359,7 @@ contract BeanPool is Ownable,ERC721Holder {
             pool.lpToken2.safeTransferFrom(
                 address(msg.sender),
                 address(this),
-                _amount.div(4)
+                _amount.mul(pool.amountRate).div(1000)
             );
         }
         miner.amount = miner.amount.add(_amount);
@@ -395,7 +398,7 @@ contract BeanPool is Ownable,ERC721Holder {
             pool.lpToken2.transferFrom(
                 address(msg.sender),
                 address(this),
-                _amount.div(4)
+                _amount.mul(pool.amountRate).div(1000)
             );
         }
         miner.amount = miner.amount.add(_amount);
@@ -405,22 +408,22 @@ contract BeanPool is Ownable,ERC721Holder {
         uint256 rate = pool.powerRate;
         if (nft1 > 0 && nftToken.ownerOf(nft1) == msg.sender) {
             level = nftToken.levelOf(nft1);
-            rate += nftRate[level];
+            rate += pool.powerRate * nftRate[level] / 1000;
             nftToken.safeTransferFrom(msg.sender, address(this), nft1);
         }
         if (nft2 > 0 && nftToken.ownerOf(nft2) == msg.sender) {
             level2 = nftToken.levelOf(nft2);
-            rate += nftRate[level2];
+            rate += pool.powerRate * nftRate[level2] / 1000;
             nftToken.safeTransferFrom(msg.sender, address(this), nft2);
         }
         if (nft3 > 0 && nftToken.ownerOf(nft3) == msg.sender) {
             level3 = nftToken.levelOf(nft3);
-            rate += nftRate[level3];
+            rate += pool.powerRate * nftRate[level3] / 1000;
             nftToken.safeTransferFrom(msg.sender, address(this), nft3);
         }
         // 同级别三张，有彩蛋
         if(level == 2 && level == level2 && level2 == level3) {
-            rate = rate + 15000;
+            rate += pool.powerRate * 5000/1000;
         }
         uint256 power = _amount.mul(rate).div(1000);
         miner.power = miner.power.add(power);
@@ -486,7 +489,7 @@ contract BeanPool is Ownable,ERC721Holder {
         if (pool.isLp) {
             pool.lpToken2.transfer(
                 msg.sender,
-                miner.amount.div(4) // div(1e6).mul(1e8) equ mul(1e12)
+                _amount.mul(pool.amountRate).div(1000)
             );
         }
 
@@ -547,7 +550,7 @@ contract BeanPool is Ownable,ERC721Holder {
         if (pool.isLp) {
             pool.lpToken2.transfer(
                 msg.sender,
-                miner.amount.div(4) // div(1e6).mul(1e8) equ mul(1e12)
+                miner.amount.mul(pool.amountRate).div(1000)
             );
         }
         emit EmergencyWithdraw(msg.sender, _pid, miner.amount);
