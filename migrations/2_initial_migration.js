@@ -389,7 +389,8 @@ module.exports = async function(deployer, network, accounts) {
     console.log(blackHoleAddress);
 
     let initSupply = 9990000;
-    await deployer.deploy(ERC20PanToken, pancakeRouter, blackHoleAddress, airdropAddress, initSupply, accounts[0]);
+    let startTimestamp = toTimestamp("2021-09-18 21:00:00");
+    await deployer.deploy(ERC20PanToken, pancakeRouter, blackHoleAddress, airdropAddress, initSupply, startTimestamp, accounts[0]);
     let beanToken = await ERC20PanToken.deployed();
     // let beanToken = await ERC20PanToken.at("0x3aF28Da6a016143a9DCa040eC8632D88fAA1cfd2");
     beanToken.setSwapAndLiquifyEnabled(false); // xxxx
@@ -513,7 +514,8 @@ module.exports = async function(deployer, network, accounts) {
     console.log(blackHoleAddress);
 
     let initSupply = 9990000;
-    await deployer.deploy(ERC20PanToken, pancakeRouter, blackHoleAddress, airdropAddress, initSupply, accounts[0]);
+    let startTimestamp = toTimestamp("2021-09-18 21:00:00");
+    await deployer.deploy(ERC20PanToken, pancakeRouter, blackHoleAddress, airdropAddress, initSupply, startTimestamp, accounts[0]);
     let beanToken = await ERC20PanToken.deployed();
     // let beanToken = await ERC20PanToken.at("0x3aF28Da6a016143a9DCa040eC8632D88fAA1cfd2");
     await beanToken.setSwapAndLiquifyEnabled(true); // xxxx
@@ -558,7 +560,7 @@ module.exports = async function(deployer, network, accounts) {
     await pool.addPool(1200, 0, beanToken.address, zeroAddress, false, 3*24*1200, false);
     await pool.addPool(4000, 0, beanToken.address, zeroAddress, false, 7*24*1200, false);
     await pool.addPool(8000, 0, beanToken.address, zeroAddress, false, 15*24*1200, false);
-    await pool.addPool(1600, 0, beanToken.address, zeroAddress, false, 30*24*1200, false);
+    await pool.addPool(16000, 0, beanToken.address, zeroAddress, false, 30*24*1200, false);
 
     // amountRate 1000 / 250 = 4 / 1
     await pool.addPool(1000, 250, beanToken.address, BUSDT, true, 3*24*1200, false);

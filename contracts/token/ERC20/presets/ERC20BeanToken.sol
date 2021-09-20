@@ -8,6 +8,8 @@ import "../../ERC721/presets/ERC721Card.sol";
 import "../../../access/Ownable.sol";
 import "../../../utils/math/SafeMath.sol";
 import "../../../utils/Address.sol";
+import "../extensions/ERC20Pausable.sol";
+import "../../../access/AccessControlEnumerable.sol";
 import '../../../interfaces/IUniswapV2Factory.sol';
 import '../../../interfaces/IUniswapV2Pair.sol';
 // import '../utils/BetaOracleUniswapV2.sol';
@@ -164,9 +166,11 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
     ) external;
 }
 
-contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
+contract ERC20BeanToken is Context, ERC20Burnable, ERC20Pausable, AccessControlEnumerable, Ownable, ERC721Holder {
     using SafeMath for uint256;
     using Address for address;
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     IUniswapV2Router02 public immutable uniswapV2Router;
     // BetaOracleUniswapV2 oracleUniswap;
     // address public immutable uniswapV2Pair;
@@ -176,6 +180,7 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
     // address public immutable liquidAddress;
     ERC721Card public nftToken;
     uint256 public initialSupply;
+    uint256 public startTimestamp;
     bool inSwapAndLiquify;
     bool public swapAndLiquifyEnabled = false;
     uint256 level1EthValue;
@@ -221,12 +226,16 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         address airdropAddress_,
         // address liquidAddress_,
         uint256 _initialSupply,
+        uint256 _startTimestamp,
         address owner
     ) ERC20("MagicBean XXX Token", "BEANX") {
-        
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _setupRole(MINTER_ROLE, _msgSender());
+        _setupRole(PAUSER_ROLE, _msgSender());
         blackholeAddress = blackholeAddress_;
         airdropAddress = airdropAddress_;
         // liquidAddress = liquidAddress_;
+        startTimestamp = _startTimestamp;
         initialSupply = _initialSupply * (10**decimals());
         level1EthValue = 0.001e18;
         level2EthValue = 0.003e18;
@@ -266,6 +275,7 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
             uint112 reserve0;
             uint112 reserve1;
             // uint32  timeBlock;
+            require(block.timestamp >= startTimestamp, "Token transfer didn't start.");
             (reserve0, reserve1, ) = pair.getReserves();
             // uint256 ethAmount = oracleUniswap.getAssetETHValue(address(this), amount);
             uint256 ethAmount = uniswapV2Router.quote(amount, reserve0, reserve1);
@@ -288,14 +298,11 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         //if any account belongs to _isExcludedFromFee account then remove the fee
         if(_isExcludedFromFee[msg.sender] || _isExcludedFromFee[to]){
             _transfer(msg.sender, to, amount);
-        } else if (msg.sender != uniswapV2Pair) {
+        } else {
             _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
             _transfer(msg.sender, airdropAddress, amount.mul(airdropFeeRate).div(100));
             // _transfer(msg.sender, liquidAddress, amount.mul(liquidityFeeRate).div(100));
             _transfer(msg.sender, to, amount.sub(amount.mul(allTxFeeRate).div(100)));
-        } else {
-            _transfer(msg.sender, blackholeAddress, amount.mul(blackholeFeeRate).div(100));
-            _transfer(msg.sender, to, amount.sub(amount.mul(blackholeFeeRate).div(100)));
         }
         return true;
         
@@ -320,6 +327,56 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
         _approve(sender, msg.sender, allowance(sender,msg.sender).sub(amount, "ERC20: transfer amount exceeds allowance"));
 
         return true;
+    }
+
+    /**
+     * @dev Creates `amount` new tokens for `to`.
+     *
+     * See {ERC20-_mint}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `MINTER_ROLE`.
+     */
+    function mint(address to, uint256 amount) public virtual {
+        require(hasRole(MINTER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have minter role to mint");
+        _mint(to, amount);
+    }
+
+    /**
+     * @dev Pauses all token transfers.
+     *
+     * See {ERC20Pausable} and {Pausable-_pause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function pause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to pause");
+        _pause();
+    }
+
+    /**
+     * @dev Unpauses all token transfers.
+     *
+     * See {ERC20Pausable} and {Pausable-_unpause}.
+     *
+     * Requirements:
+     *
+     * - the caller must have the `PAUSER_ROLE`.
+     */
+    function unpause() public virtual {
+        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC20PresetMinterPauser: must have pauser role to unpause");
+        _unpause();
+    }
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal virtual override(ERC20, ERC20Pausable) {
+        super._beforeTokenTransfer(from, to, amount);
     }
 
     // function dealBonusAndLiquify(uint256 contractTokenBalance) private lockTheSwap {
@@ -440,7 +497,7 @@ contract ERC20BeanToken is ERC20Burnable, Ownable, ERC721Holder {
             // Create a uniswap pair for this new token
             uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory())
               .createPair(address(this), uniswapV2Router.WETH());
-            _isExcludedFromFee[uniswapV2Pair] = true;
+            // _isExcludedFromFee[uniswapV2Pair] = true;
             // oracleUniswap = new BetaOracleUniswapV2(uniswapV2Router.WETH(), uniswapV2Router.factory(), 3);
             // oracleUniswap.initPriceFromPair(address(this));
         }

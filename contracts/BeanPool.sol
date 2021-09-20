@@ -445,9 +445,10 @@ contract BeanPool is Ownable,ERC721Holder {
         level = 0;
         if (power >= 1000) {
             level = 1;
-            if (power >= 2000) {
-                level = 2;
-            }
+        } else if (power >= 2000) {
+            level = 2;
+        } else if (power >= 3000) {
+            level = 3;
         }
         return level;
     }
