@@ -109,6 +109,7 @@ contract BeanPool is Ownable,ERC721Holder {
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
     mapping(address => uint256) public userPower;
+    mapping(address => uint256) public groupPower;
     mapping(address => address) public userParent;
     mapping(address => uint8) public userLevel;
     mapping(address => uint256) public inviteReward;
@@ -251,8 +252,8 @@ contract BeanPool is Ownable,ERC721Holder {
     //     require(bal == newLpToken.balanceOf(address(this)), "migrate: bad");
     //     pool.lpToken = newLpToken;
     // }
-    function getInviteInfo(address addr) public view returns (uint16, uint256, uint256, address){
-        return (userLevel[addr],userPower[addr], inviteReward[addr], userParent[addr]);
+    function getInviteInfo(address addr) public view returns (uint16, uint256, uint256, uint256, address){
+        return (userLevel[addr],userPower[addr], groupPower[addr], inviteReward[addr], userParent[addr]);
     }
     // Return reward multiplier over the given _from to _to block.
     function getMultiplier(uint256 _from, uint256 _to)
@@ -366,6 +367,7 @@ contract BeanPool is Ownable,ERC721Holder {
         uint256 power = _amount.mul(pool.powerRate).div(1000);
         miner.power = miner.power.add(power);
         totalPower = totalPower.add(power);
+        upGroupPower(msg.sender, power);
         userPower[msg.sender] = userPower[msg.sender].add(power);
         uint256 blockNumber = block.number;
         miner.endBlock = blockNumber.add(pool.timeBlocks); // * 24 * 1200;
@@ -428,6 +430,7 @@ contract BeanPool is Ownable,ERC721Holder {
         uint256 power = _amount.mul(rate).div(1000);
         miner.power = miner.power.add(power);
         totalPower = totalPower.add(power);
+        upGroupPower(msg.sender, power);
         userPower[msg.sender] = userPower[msg.sender].add(power);
         uint256 blockNumber = block.number;
         miner.endBlock = blockNumber.add(pool.timeBlocks);
@@ -511,6 +514,7 @@ contract BeanPool is Ownable,ERC721Holder {
         // reduce power
         // uint256 power = miner.power.mul(_amount).div(miner.amount);
         totalPower = totalPower.sub(miner.power);
+        downGroupPower(msg.sender, miner.power);
 
         userPower[msg.sender] = userPower[msg.sender].sub(miner.power);
         //  reduce amount
@@ -542,6 +546,28 @@ contract BeanPool is Ownable,ERC721Holder {
         }
     }
 
+    function upGroupPower(address child, uint256 power) private {
+
+        for(uint8 layer=0; layer< maxInviteLayer; layer++) {
+            address parent = userParent[child];
+            if (parent == address(0) || parent == child)
+                return;
+            groupPower[parent] = groupPower[parent].add(power);
+            child = parent;
+        }
+    }
+
+    function downGroupPower(address child, uint256 power) private {
+
+        for(uint8 layer=0; layer< maxInviteLayer; layer++) {
+            address parent = userParent[child];
+            if (parent == address(0) || parent == child)
+                return;
+            groupPower[parent] = groupPower[parent].sub(power);
+            child = parent;
+        }
+    }
+
     // Withdraw without caring about rewards. EMERGENCY ONLY.
     function emergencyWithdraw(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
@@ -558,6 +584,7 @@ contract BeanPool is Ownable,ERC721Holder {
         userPower[msg.sender] = userPower[msg.sender].sub(miner.power);
         userLevel[msg.sender] = getUserLevel(userPower[msg.sender]);
         totalPower = totalPower.sub(miner.power);
+        downGroupPower(msg.sender, miner.power);
         miner.amount = 0;
         miner.rewardDebt = 0;
         miner.power = 0;
