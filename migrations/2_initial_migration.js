@@ -434,7 +434,7 @@ module.exports = async function(deployer, network, accounts) {
     await pool.addPool(1200, 0, beanToken.address, zeroAddress, false, 3*24*1200, false);
     await pool.addPool(4000, 0, beanToken.address, zeroAddress, false, 7*24*1200, false);
     await pool.addPool(8000, 0, beanToken.address, zeroAddress, false, 15*24*1200, false);
-    await pool.addPool(1600, 0, beanToken.address, zeroAddress, false, 30*24*1200, false);
+    await pool.addPool(16000, 0, beanToken.address, zeroAddress, false, 30*24*1200, false);
 
     // amountRate = 1000 / 4
     await pool.addPool(1000, 250, beanToken.address, BUSDT, true, 3*24*1200, false);
@@ -446,7 +446,7 @@ module.exports = async function(deployer, network, accounts) {
     await pool.addPool(1500, 1000, beanToken.address, panTokenAddress, true, 3*24*1200, false);
     await pool.addPool(6000, 1000, beanToken.address, panTokenAddress, true, 7*24*1200, false);
     await pool.addPool(10000, 1000, beanToken.address, panTokenAddress, true, 15*24*1200, false);
-    await pool.addPool(16000, 1000, beanToken.address, panTokenAddress, true, 30*24*1200, false);
+    await pool.addPool(20000, 1000, beanToken.address, panTokenAddress, true, 30*24*1200, false);
 
     await deployer.deploy(BeanInviteReward, beanToken.address, pool.address);
     let inviteReward = await BeanInviteReward.deployed();

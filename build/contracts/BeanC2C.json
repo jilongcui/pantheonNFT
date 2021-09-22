@@ -23322,14 +23322,122 @@
   },
   "networks": {
     "56": {
-      "events": {},
+      "events": {
+        "0x34a30b4763822d24aabe89e533a6b7cb17320c79b6f36fd8d24f6ec9d1ccd05a": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "nftId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            }
+          ],
+          "name": "C2CBuyItemEvent",
+          "type": "event"
+        },
+        "0x44312976b1f5e95e73b3484c3c98f645e08e08b5059b84dfea041a4e815a736b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "nftId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "value",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            }
+          ],
+          "name": "C2CDepositItemEvent",
+          "type": "event"
+        },
+        "0xd6a8a797238a0196f4a98543809e846abfdc496a09799c6857519d5156447dc1": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "nftId",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "timestamp",
+              "type": "uint256"
+            }
+          ],
+          "name": "C2CDownItemEvent",
+          "type": "event"
+        },
+        "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        }
+      },
       "links": {},
-      "address": "0x2920D2E9894f6b64C453DA7D796d30ad5cA8F778",
-      "transactionHash": "0x0a3487b90df770310de579798922c809a8b4fafdce442a2f58cc08b322897ff7"
+      "address": "0x65d666541c679634d306e7cE9bD223212aCD09Eb",
+      "transactionHash": "0xe069d6a25217a0539476676d4ff732a6e620dba3c7b6afae2fb945d0d741ddf5"
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-09-21T02:23:58.333Z",
+  "updatedAt": "2021-09-22T02:44:22.446Z",
+  "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
     "methods": {
