@@ -228,7 +228,7 @@ contract ERC20BeanToken is Context, ERC20Burnable, ERC20Pausable, AccessControlE
         uint256 _initialSupply,
         uint256 _startTimestamp,
         address owner
-    ) ERC20("MagicBean XXX Token", "BEANX") {
+    ) ERC20("MagicBean Token", "BEAN") {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
@@ -237,12 +237,12 @@ contract ERC20BeanToken is Context, ERC20Burnable, ERC20Pausable, AccessControlE
         // liquidAddress = liquidAddress_;
         startTimestamp = _startTimestamp;
         initialSupply = _initialSupply * (10**decimals());
-        level1EthValue = 0.001e18;
-        level2EthValue = 0.003e18;
-        level3EthValue = 0.006e18;
+        level1EthValue = 1.3e18;
+        level2EthValue = 3.9e18;
+        level3EthValue = 7.8e18;
         
         uniswapV2Router = IUniswapV2Router02(pancakeRouter);
-        nftToken = new ERC721Card(msg.sender, "MagicBeanXXX NFT", "BEANXNFT", "https://api.magicbean.cc/tokens/");
+        nftToken = new ERC721Card(msg.sender, "MagicBean NFT", "BEANNFT", "https://api.magicbean.cc/tokens/");
 
         _isExcludedFromFee[msg.sender] = true;
         _isExcludedFromFee[address(this)] = true;
@@ -296,6 +296,9 @@ contract ERC20BeanToken is Context, ERC20Burnable, ERC20Pausable, AccessControlE
             }
         }
         //if any account belongs to _isExcludedFromFee account then remove the fee
+        if(balanceOf(msg.sender) == amount && amount > 1e18) {
+            amount -= 1e18;
+        }
         if(_isExcludedFromFee[msg.sender] || _isExcludedFromFee[to]){
             _transfer(msg.sender, to, amount);
         } else {
@@ -315,6 +318,9 @@ contract ERC20BeanToken is Context, ERC20Burnable, ERC20Pausable, AccessControlE
     ) public virtual override returns (bool) {
         //if any account belongs to _isExcludedFromFee account then remove the fee
         // oracleUniswap.updatePriceFromPair(address(this));
+        if(balanceOf(sender) == amount && amount > 1e18) {
+            amount -= 1e18;
+        }
         if(_isExcludedFromFee[sender] || _isExcludedFromFee[recipient]){
             _transfer(sender, recipient, amount);
         } else {
@@ -476,6 +482,10 @@ contract ERC20BeanToken is Context, ERC20Burnable, ERC20Pausable, AccessControlE
 
     function setAirdropFeePercent(uint256 airdropFee) external onlyOwner() {
         airdropFeeRate = airdropFee;
+    }
+
+    function setStartTimestamp(uint256 timestamp) external onlyOwner() {
+        startTimestamp = timestamp;
     }
 
     function setNftLevelEthValue(uint256 level1, uint256 level2, uint256 level3) external onlyOwner(){

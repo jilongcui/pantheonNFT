@@ -23431,13 +23431,12 @@
         }
       },
       "links": {},
-      "address": "0x65d666541c679634d306e7cE9bD223212aCD09Eb",
-      "transactionHash": "0xe069d6a25217a0539476676d4ff732a6e620dba3c7b6afae2fb945d0d741ddf5"
+      "address": "0xE47B6b32ce87601A8D61731b8244E7d13311188d",
+      "transactionHash": "0x9e47670185b8fcf91c5f7c24a5a49e5f5b5668cbc41cd1e89b9d9e12571bbd25"
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-09-22T02:44:22.446Z",
-  "networkType": "ethereum",
+  "updatedAt": "2021-09-24T14:11:33.774Z",
   "devdoc": {
     "kind": "dev",
     "methods": {

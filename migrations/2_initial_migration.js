@@ -287,6 +287,7 @@ module.exports = async function(deployer, network, accounts) {
     let pool = await BeanPool.deployed();
     await panToken.transfer(pool.address, web3.utils.toWei("50000"));
     // console.log(token);
+    pool.setInviteEnable(true);
     // pool.addPool(rate, token, isLp, dayNum, withUpdate);
     await pool.addPool(1500, panToken.address, false, 3*24*1200, false);
     await pool.addPool(3750, panToken.address, false, 7*24*1200, false);
@@ -389,11 +390,12 @@ module.exports = async function(deployer, network, accounts) {
     console.log(blackHoleAddress);
 
     let initSupply = 9990000;
-    let startTimestamp = toTimestamp("2021-09-18 21:00:00");
+    // let startTimestamp = toTimestamp("2021-09-18 21:00:00");
+    let startTimestamp = "1632574800";
     await deployer.deploy(ERC20PanToken, pancakeRouter, blackHoleAddress, airdropAddress, initSupply, startTimestamp, accounts[0]);
     let beanToken = await ERC20PanToken.deployed();
     // let beanToken = await ERC20PanToken.at("0x3aF28Da6a016143a9DCa040eC8632D88fAA1cfd2");
-    beanToken.setSwapAndLiquifyEnabled(false); // xxxx
+    beanToken.setSwapAndLiquifyEnabled(true);
 
     // Deploy IDO
     // console.log("Deploy IDO");
@@ -428,7 +430,7 @@ module.exports = async function(deployer, network, accounts) {
     await beanToken.transfer("0x03fB46515DC130736f14492c4d67002B02A6488d", web3.utils.toWei("200000")); //
     // await beanToken.transfer(ido.address, web3.utils.toWei("400000"));
     await beanToken.setExcludeFromFee(pool.address);
-    await beanToken.transfer(pool.address, web3.utils.toWei("4000000")); // xxxxx 7000000
+    await beanToken.transfer(pool.address, web3.utils.toWei("7000000"));
     // console.log(token);
     // pool.addPool(rate, token, isLp, dayNum, withUpdate);
     await pool.addPool(1200, 0, beanToken.address, zeroAddress, false, 3*24*1200, false);
@@ -450,7 +452,7 @@ module.exports = async function(deployer, network, accounts) {
 
     await deployer.deploy(BeanInviteReward, beanToken.address, pool.address);
     let inviteReward = await BeanInviteReward.deployed();
-    await beanToken.transfer(inviteReward.address, web3.utils.toWei("2000000")); // xxxx 2000000
+    await beanToken.transfer(inviteReward.address, web3.utils.toWei("2000000"));
 
     console.log("115");
     console.log("PAN");
@@ -518,7 +520,7 @@ module.exports = async function(deployer, network, accounts) {
     await deployer.deploy(ERC20PanToken, pancakeRouter, blackHoleAddress, airdropAddress, initSupply, startTimestamp, accounts[0]);
     let beanToken = await ERC20PanToken.deployed();
     // let beanToken = await ERC20PanToken.at("0x3aF28Da6a016143a9DCa040eC8632D88fAA1cfd2");
-    await beanToken.setSwapAndLiquifyEnabled(true); // xxxx
+    await beanToken.setSwapAndLiquifyEnabled(true); //
 
     // Deploy IDO
     // console.log("Deploy IDO");

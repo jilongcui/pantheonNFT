@@ -84,7 +84,7 @@ contract BeanPool is Ownable,ERC721Holder {
     uint16[] public nftRate = [1000, 2000, 3000]; // times 1000
 
     // Invite
-    bool public inviteForce = false;
+    bool public inviteForce = true;
     uint8 public maxInviteLayer = 5;
     // The CHA TOKEN!
     IERC20 public panToken;
@@ -450,7 +450,7 @@ contract BeanPool is Ownable,ERC721Holder {
             level = 3;
         } else if (power >= 2000) {
             level = 2;
-        } else if (power >= 3000) {
+        } else if (power >= 1000) {
             level = 1;
         }
         return level;

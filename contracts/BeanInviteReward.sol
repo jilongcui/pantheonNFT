@@ -87,9 +87,9 @@ contract BeanInviteReward is Ownable{
     // Transfer
     BeanPool poolContract = BeanPool(poolAddress);
     uint totalReward = poolContract.inviteReward(msg.sender);
+    totalReward = totalReward.add(reward.extraReward);
     uint amount = totalReward.sub(reward.lastAmount);
-    amount = amount.add(reward.extraReward);
-  	require(amount >=100e18, "The reward is little than 100 pan.");
+  	require(amount >=10e18, "The reward is little than 10 pan.");
     require(token.balanceOf(address(this)) >= amount, "Reward pool has invalid balance.");
     token.transfer(msg.sender, amount);
     reward.lastAmount = totalReward;
@@ -104,8 +104,8 @@ contract BeanInviteReward is Ownable{
     Reward memory reward = rewardInfo[user];
     BeanPool poolContract = BeanPool(poolAddress);
     uint totalReward = poolContract.inviteReward(user);
+    totalReward = totalReward.add(reward.extraReward);
     uint amount = totalReward.sub(reward.lastAmount);
-    amount = amount.add(reward.extraReward);
     return (amount, totalReward);
   }
 
