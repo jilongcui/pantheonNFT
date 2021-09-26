@@ -125,6 +125,7 @@ contract BeanPool is Ownable,ERC721Holder {
         uint16 nft1, uint16 nft2, uint16 nft3);
     event Withdraw(address indexed user, uint256 indexed pid, uint256 amount);
     event Harvest(address indexed user, uint256 indexed pid, uint256 amount);
+    event InviteUser(address indexed parent, address indexed child, uint256 timestamp);
     event EmergencyWithdraw(
         address indexed user,
         uint256 indexed pid,
@@ -224,6 +225,7 @@ contract BeanPool is Ownable,ERC721Holder {
         require(userParent[parent] != address(0), "Parent should be invite first.");
         require(parent != msg.sender, "You cannot invite yourself.");
         userParent[msg.sender] = parent;
+        emit InviteUser(parent, msg.sender, block.timestamp);
     }
 
     function setInviteEnable(
