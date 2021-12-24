@@ -14,13 +14,14 @@ module.exports = {
     
     testnet: {
       provider: () => new HDWalletProvider(mnemonic,
-	`https://data-seed-prebsc-1-s3.binance.org:8545`,
+	`https://data-seed-prebsc-1-s1.binance.org:8545`,
 	address_index=0,//从给的mnemonic数组的第几下标开始取
 	num_addresses=20
 	),
       network_id: 97,
       gas: 8500000, 
       confirmations: 5,
+      networkCheckTimeout: 100000,
       timeoutBlocks: 1000,
       skipDryRun: true
     },
