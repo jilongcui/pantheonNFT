@@ -52,7 +52,8 @@ module.exports = {
       skipDryRun: true
     },
     rinkeby: {
-      provider: () => new HDWalletProvider(mnemonic, `wss://rinkeby.infura.io/ws/v3/97bded6c87854eba994937f640dc03f3`),
+      provider2: () => new HDWalletProvider(mnemonic, `wss://rinkeby.infura.io/ws/v3/97bded6c87854eba994937f640dc03f3`),
+      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/30895353c40943df9e6c3ea8190110c8`),
       network_id: 4,       // Rinkeby's id
       gas: 8500000,        
       gasPrice: 1000000000,  // 1 gwei (in wei) (default: 100 gwei)
