@@ -5,9 +5,9 @@ import "./utils/math/SafeMath.sol";
 import "./utils/Address.sol";
 import "./access/Ownable.sol";
 import "./token/ERC20/IERC20.sol";
-import "./PantheonPool.sol";
+import "./DogeFoodPool.sol";
 
-contract PantheonInviteReward is Ownable{
+contract DogeFoodInviteReward is Ownable{
 
   uint TOTAL_PAN_SUPPLY = 40*10**10; // 40*10^10 400000
   uint MIN_PAN_CLAIM = 1*10**6; // 1 PAN
@@ -78,7 +78,7 @@ contract PantheonInviteReward is Ownable{
     // require(timestamp.sub(reward.lastClaimTime) >= MIN_CLAIM_TIMEOFF, "You claim too frequency.");
     
     // Transfer
-    PantheonPool poolContract = PantheonPool(poolAddress);
+    DogeFoodPool poolContract = DogeFoodPool(poolAddress);
     uint totalReward = poolContract.inviteReward(msg.sender);
     uint amount = totalReward.sub(reward.lastAmount);
   	require(amount >=100e18, "The reward is little than 100 pan.");
@@ -95,7 +95,7 @@ contract PantheonInviteReward is Ownable{
 
   function getClaimInfo(address user) public view returns(uint,uint) {
     Reward memory reward = rewardInfo[user];
-    PantheonPool poolContract = PantheonPool(poolAddress);
+    DogeFoodPool poolContract = DogeFoodPool(poolAddress);
     uint totalReward = poolContract.inviteReward(user);
     uint amount = totalReward.sub(reward.lastAmount);
     return (amount, totalReward);

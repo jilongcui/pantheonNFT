@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT
 
 /**
-   # PAN tokens
+   # DogeFood tokens
  */
 import "./utils/math/SafeMath.sol";
 import "./utils/Address.sol";
@@ -11,7 +11,7 @@ import "./token/ERC20/IERC20.sol";
 import "./access/Ownable.sol";
 import "./token/ERC721/utils/ERC721Holder.sol";
 
-pragma solidity 0.8.6;
+pragma solidity ^0.8.0;
 
 // pragma solidity >=0.5.0;
 
@@ -380,7 +380,7 @@ interface IERC721Card {
     
 }
 
-contract PanToken is Context, IERC20, Ownable, ERC721Holder {
+contract DogeFoodToken is Context, IERC20, Ownable, ERC721Holder {
     using SafeMath for uint256;
     using Address for address;
 
@@ -402,8 +402,8 @@ contract PanToken is Context, IERC20, Ownable, ERC721Holder {
     uint256 private _tFeeTotal;
     uint256 private BLACKHOLE_LIMIT = _tTotal - 5 * 10 ** 8 * 10 ** 6;
 
-    string private _name = "PAN Token";
-    string private _symbol = "PAN";
+    string private _name = "DogeFood Token";
+    string private _symbol = "DGFood";
     uint8 private _decimals = 6;
     
     uint256 private _blackholeFee = 5;

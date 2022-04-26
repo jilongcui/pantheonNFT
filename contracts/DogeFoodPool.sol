@@ -24,14 +24,14 @@ interface IMigratorChef {
     function migrate(IERC20 token) external returns (IERC20);
 }
 
-// PantheonPool is the master of Reward. He can make Reward and he is a fair guy.
+// DogeFoodPool is the master of Reward. He can make Reward and he is a fair guy.
 //
 // Note that it's ownable and the owner wields tremendous power. The ownership
 // will be transferred to a governance smart contract once CHA is sufficiently
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
-contract PantheonPool is Ownable,ERC721Holder {
+contract DogeFoodPool is Ownable,ERC721Holder {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     // Info of each user.
@@ -332,7 +332,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     }
 
 
-    // Deposit LP tokens to PantheonPool for CHA allocation.
+    // Deposit LP tokens to DogeFoodPool for CHA allocation.
     function deposit(uint256 _pid, uint256 _amount) public returns (bool){
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo memory miner = minerInfo[_pid][msg.sender];
@@ -375,7 +375,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         return true;
     }
 
-    // Deposit LP tokens to PantheonPool for CHA allocation.
+    // Deposit LP tokens to DogeFoodPool for CHA allocation.
     function depositWithNFT(uint256 _pid, uint256 _amount, uint16 nft1, uint16 nft2, uint16 nft3) public {
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo memory miner = minerInfo[_pid][msg.sender];
@@ -478,7 +478,7 @@ contract PantheonPool is Ownable,ERC721Holder {
     function random() private view returns (uint8) {
         return uint8(uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty)))%100);
     }
-    // harvest LP tokens from PantheonPool.
+    // harvest LP tokens from DogeFoodPool.
     function harvest(uint256 _pid) public {
         // PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];
@@ -493,7 +493,7 @@ contract PantheonPool is Ownable,ERC721Holder {
         emit Harvest(msg.sender, _pid, pending);
     }
 
-    // Withdraw LP tokens from PantheonPool.
+    // Withdraw LP tokens from DogeFoodPool.
     function withdraw(uint256 _pid, uint256 _amount) public {
         PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[_pid][msg.sender];

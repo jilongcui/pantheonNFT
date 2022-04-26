@@ -6,7 +6,7 @@ import "./utils/Address.sol";
 import "./access/Ownable.sol";
 import "./token/ERC20/IERC20.sol";
 
-contract PantheonIDO is Ownable{
+contract DogeFoodIDO is Ownable{
 
   // 1BNB = 400U
   // 1BNB = 1600PAN
