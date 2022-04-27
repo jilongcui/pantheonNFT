@@ -5,205 +5,183 @@ import "./utils/math/SafeMath.sol";
 import "./utils/Address.sol";
 import "./access/Ownable.sol";
 import "./token/ERC20/IERC20.sol";
+import "./token/ERC721/IERC721Card.sol";
 
-contract DogeFoodBlindBox is Ownable{
+contract DogeFoodBlindBox is Ownable {
+    using SafeMath for uint256;
 
-  // 1BNB = 400U
-  // 1BNB = 1600PAN
-  // 1PAN = 10^6wei
-  // 1ETH = 10^18wei
-  uint MIN_DEPOSITE = 1*10**16; // 0.01
-  uint MAX_DEPOSITE_ETH = 0.125 ether; //50U=200PAN
-  uint MAX_DEPOSITE_PAN = 1*10**18; //10**12
-  uint TOTAL_PAN_SUPPLY = 40*10**10; // 40*10^10 400000
-  uint TOTAL_ETH_SUPPLY = 250*10**18; // 250ETH
-  uint MIN_PAN_CLAIM = 1*10**6; // 1 PAN
+    enum BBoxStatus {
+        BLINDBOX_INIT,
+        BLINDBOX_START,
+        BLINDBOX_SOLDOUT
+    }
+    //
+    struct BBox {
+        IERC721Card nftToken;
+        address tokenAddr;
+        address tokenValue;
+        uint256 startTimestamp;
+        uint256 endTimestamp;
+        uint16 total;
+        uint16 current;
+        BoxStatus status;
+    }
 
-  enum BoxStatus{
-    BLINDBOX_START,
-    BLINDBOX_END,
-    BLINDBOX_CLAIM_START,
-    BLINDBOX_CLAIM
-  }
+    struct BBoxer {
+        uint256 ethValue;
+        uint256 panValue;
+        // uint timestamp;
+        bool claimed;
+    }
 
-  struct BBox {
-    uint ethValue;
-    uint panValue;
-    // uint timestamp;
-    bool claimed;
-  }
+    // struct BBoxerLog {
+    //   address addr;
+    //   uint ethValue;
+    //   uint panValue;
+    //   uint timestamp;
+    // }
 
-  struct BBoxer {
-    uint ethValue;
-    uint panValue;
-    // uint timestamp;
-    bool claimed;
-  }
+    event BBoxSoldEvent(
+        address to,
+        uint8 category,
+        uint8 status,
+        uint16 current,
+        uint16 total
+    );
+    event BBoxStateEvent(BoxStatus status);
 
-  // struct BBoxerLog {
-  //   address addr;
-  //   uint ethValue;
-  //   uint panValue;
-  //   uint timestamp;
-  // }
+    // 发布者
+    address public chairperson;
+    // 受益者
+    address public beneficancy;
+    // BBoxerLog[] public idoerLogs;
 
-  using SafeMath for uint;
+    // 代币的地址
+    address payable public nftAddress;
 
-  event BBoxProcessEvent(uint remain, uint total);
-  event BBoxStateEvent(BoxStatus status);
+    // 新的盲盒的状态
+    mapping(address => BBox) public bboxes;
 
-  // 发布者
-  address public chairperson;
-  // 受益者
-  address public beneficancy;
-  // BBoxerLog[] public idoerLogs;
-  // 剩余供应
-  uint public remainSupply;
-  // 开始时间戳
-  uint public idoStartTimestamp;
-  // 结束时间戳
-  uint public idoEndTimestamp;
-  // 领取时间戳
-  uint public claimStartTimestamp;
-  // 结束领取时间戳
-  uint public claimEndTimestamp;
+    // 构建函数，代币地址，受益者地址
+    // ido 开始时间、结束时间、可以领取时间、领取结束时间
+    constructor(address beneficancy_) payable {
+        chairperson = msg.sender;
+        beneficancy = beneficancy_;
+    }
 
-  // 代币的地址
-  address payable public erc20Address;
-  
-  // token对象
-  IERC20 public token;
-  // 新的BLINDBOX地址，用户领取状态
-  mapping(address => BBoxer) public idoers;
-  // 构建函数，代币地址，受益者地址
-  // ido 开始时间、结束时间、可以领取时间、领取结束时间
-  constructor(address payable erc20Address_,
-    address beneficancy_,
-    uint idoStart_,
-    uint idoEnd_,
-    uint claimStart_,
-    uint claimEnd_
-    ) payable {
-  	chairperson = msg.sender;
-  	remainSupply = TOTAL_ETH_SUPPLY;
-    beneficancy = beneficancy_;
-    erc20Address = erc20Address_;
-    idoStartTimestamp = idoStart_;
-    idoEndTimestamp = idoEnd_;
-    claimStartTimestamp = claimStart_;
-    claimEndTimestamp = claimEnd_;
-  	token = IERC20(erc20Address);
-  }
-  
-  function setTokenAddress(address payable erc20Address_) public onlyOwner{
-    require(erc20Address_ != address(0));
-     erc20Address = erc20Address_;
-     token = IERC20(erc20Address);
-  }
+    function setBBoxValue(
+        uint8 pid,
+        address tokenAddr,
+        uint256 tokenValue
+    ) public onlyOwner {
+        require(_erc20Address != address(0));
+        BBox storage box = bboxes[pid];
+        box.tokenAddr = tokenAddr;
+        box.tokenValue = tokenValue;
+    }
 
-  function setBBoxTime(uint start, uint end) public onlyOwner{
-    idoStartTimestamp = start;
-    idoEndTimestamp = end;
-  }
+    function setBBoxTime(
+        uint16 pid,
+        uint256 start,
+        uint256 end
+    ) public onlyOwner {
+        require(end > start);
+        BBox storage box = bboxes[pid];
+        box.startTimestamp = start;
+        box.endTimestamp = end;
+    }
 
-  function setClaimTime(uint start, uint end) public onlyOwner{
-    claimStartTimestamp = start;
-    claimEndTimestamp = end;
-  }
+    function setBBoxTotal(uint16 pid, uint16 total) public onlyOwner {
+        require(end > start);
+        BBox storage box = bboxes[pid];
+        box.total = total;
+    }
 
-  // 发送Eth进行BLINDBOX
-  // 本质是通过这个函数发送ETH，然后得到的对应代币的数量，这些记录在链上。
-  function sendEthForBBox() payable public returns (bool){
-    uint timestamp = block.timestamp;
-    require(msg.value <= remainSupply, "No remain supply");
-    require(msg.value >= MIN_DEPOSITE, "BLINDBOX value should big than 0.1ETH");
-    require(msg.value <= MAX_DEPOSITE_ETH, "BLINDBOX value should less than 4ETH");
-    require(idoers[msg.sender].ethValue + msg.value <= MAX_DEPOSITE_ETH, "BLINDBOX total value should less than 4ETH");
-    require(timestamp >= idoStartTimestamp && timestamp < idoEndTimestamp, "BLINDBOX stopped");
+    function setBBoxNftToken(uint16 pid, address nftAddress) public onlyOwner {
+        require(end > start);
+        BBox storage box = bboxes[pid];
+        box.nftToken = IERC721Card(nftAddress);
+    }
 
-    BBoxer memory idoer = idoers[msg.sender];
+    function setBBoxInfo(
+        uint8 pid,
+        address nftAddress,
+        address tokenAddr,
+        uint256 tokenValue,
+        uint16 total,
+        uint256 startTime,
+        uint256 endTime
+    ) public onlyOwner {
+        bboxes[pid] = BBox({
+            nftToken: IERC721Card(nftAddress),
+            tokenAddr: tokenAddr,
+            tokenValue: tokenAddr,
+            total: total,
+            current: 0,
+            startTimestamp: startTime,
+            endTimestamp: endTime,
+            status: BBoxStatus.BLINDBOX_INIT
+        });
+    }
 
-    uint value = msg.value;
-    uint panValue = value.mul(1600).div(10**12);
-    remainSupply = remainSupply.sub(value);
+    // 发送Eth进行BLINDBOX
+    // 本质是通过这个函数发送ETH，然后得到的对应代币的数量，这些记录在链上。
+    function buyBBox(uint16 pid) public payable returns (bool) {
+        uint256 timestamp = block.timestamp;
+        BBox storage box = bboxes[pid];
+        require(box.current < box.total, "No remain bbox supply");
+        // require(
+        //     msg.value >= box.tokenValue,
+        //     "BLINDBOX value should big than box value"
+        // );
+        // require(
+        //     idoers[msg.sender].ethValue + msg.value <= MAX_DEPOSITE_ETH,
+        //     "BLINDBOX total value should less than 4ETH"
+        // );
+        require(
+            timestamp >= box.startTimestamp && timestamp < box.endTimestamp,
+            "BLINDBOX is not open"
+        );
+        if (box.tokenAddr == address(0)) {
+            payable(beneficancy).transfer(box.tokenValue);
+        } else {
+            IERC20 memory token1 = IERC20(box.tokenAddr);
+            token1.transferFrom(msg.sender, beneficancy, box.tokenValue);
+        }
 
-    uint newValue = idoer.ethValue + value;
-    uint newPanValue = idoer.panValue + panValue;
-    idoers[msg.sender] = BBoxer({
-      ethValue: newValue,
-      panValue: newPanValue,
-      claimed: false
-    });
-  	payable(beneficancy).transfer(value);
+        box.current = box.current.add(1);
+        if (box.current == box.total) {
+            box.status = box.BLINDBOX_SOLDOUT;
+        }
+        box.nftToken.mintCard(pid, msg.sender);
+        emit BBoxSoldEvent(msg.sender, pid, box.status, box.current, box.total);
+        return true;
+    }
 
-    emit BBoxProcessEvent(remainSupply, TOTAL_ETH_SUPPLY);
-    // idoerLogs.push(BBoxerLog({
-    //   addr: address(msg.sender),
-    //   ethValue: newValue,
-    //   panValue: panValue,
-    //   timestamp: timestamp
-    // }));
-    return true;
-  }
-  
-  function release() public  onlyOwner {
-      payable(chairperson).transfer(address(this).balance);
-      token.transfer(chairperson, token.balanceOf(address(this)));
-  }
-  
-  // claim
-  function claimFromBBox() public returns (bool){
-    uint timestamp = block.timestamp;
-  	require(timestamp >= claimStartTimestamp); //  && timestamp < claimEndTimestamp
-    // require(token.balanceOf(address(this)) >= idoers[msg.sender].panValue, "PANBBox has invalid balance.");
-  	
-  	BBoxer memory idoer = idoers[msg.sender];
-  	// idoer = idoers[msg.sender];
-  	
-  	require(idoer.panValue >=10**6, "You need deposite fund first.");
-  	require(!idoer.claimed, "You already claimed");
-    // require(idoer.panValue >= MIN_PAN_CLAIM, "Claim value should big than 1PAN");
-    
-    uint value = idoer.panValue;
-    idoer.claimed = true;
-    
-    token.transfer(msg.sender, value);
-    // idoer.panValue = idoer.panValue.sub(value);
-    idoer.panValue = 0;
-    idoers[msg.sender] = idoer;
-    return true;
-  }
+    function release() public onlyOwner {
+        payable(chairperson).transfer(address(this).balance);
+        token.transfer(chairperson, token.balanceOf(address(this)));
+    }
 
-  function isBBoxEnable() public view returns(bool) {
-    uint timestamp = block.timestamp;
-    if (timestamp >= idoStartTimestamp && timestamp < idoEndTimestamp)
-      return true;
-    else
-      return false;
-  }
+    function isBBoxEnable() public view returns (bool) {
+        uint256 timestamp = block.timestamp;
+        if (timestamp >= idoStartTimestamp && timestamp < idoEndTimestamp)
+            return true;
+        else return false;
+    }
 
-  function isClaimEnable() public view returns(bool) {
-    uint timestamp = block.timestamp;
-    if (timestamp >= claimStartTimestamp && timestamp < claimEndTimestamp)
-      return true;
-    else
-      return false;
-  }
+    function isClaimEnable() public view returns (bool) {
+        uint256 timestamp = block.timestamp;
+        if (timestamp >= claimStartTimestamp && timestamp < claimEndTimestamp)
+            return true;
+        else return false;
+    }
 
-  function getBBoxRemainSupply() public view returns(uint,uint) {
-    return (remainSupply, TOTAL_ETH_SUPPLY);
-  }
+    function getBBoxRemainSupply() public view returns (uint256, uint256) {
+        return (remainSupply, TOTAL_ETH_SUPPLY);
+    }
 
-  function getBBoxRemainEth() public view returns(uint, uint) {
-    return (idoers[msg.sender].ethValue, MAX_DEPOSITE_ETH);
-  }
-
-  function getBBoxRemainPAN() public view returns(uint, uint) {
-    return (idoers[msg.sender].panValue, MAX_DEPOSITE_PAN);
-  }
-
-  function getBBoxReleaseDate() public view returns(bool, uint) {
-    return (block.timestamp >= claimStartTimestamp, claimStartTimestamp);
-  }
-
+    function getBBoxReleaseDate() public view returns (bool, uint256) {
+        return (block.timestamp >= claimStartTimestamp, claimStartTimestamp);
+    }
 }

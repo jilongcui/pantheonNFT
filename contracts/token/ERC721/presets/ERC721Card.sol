@@ -50,7 +50,14 @@ contract ERC721Card is
     mapping(uint256 => uint8) nftLevel;
     mapping(uint8 => mapping(uint8 => CardInfo)) cardInfo;
 
-    event MintWithLevel(address indexed from, address indexed to, uint16 category, uint16 level, uint256 id, uint256 timestamp);
+    event MintWithLevel(
+        address indexed from,
+        address indexed to,
+        uint16 category,
+        uint16 level,
+        uint256 id,
+        uint256 timestamp
+    );
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
@@ -75,33 +82,40 @@ contract ERC721Card is
     }
 
     function setCardInfo() internal {
-        cardInfo[1][4] = CardInfo({total:10, power:450, current:0});
-        cardInfo[1][3] = CardInfo({total:100, power:200, current:0});
-        cardInfo[1][2] = CardInfo({total:150, power:150, current:0});
-        cardInfo[1][1] = CardInfo({total:200, power:120, current:0});
-        cardInfo[1][0] = CardInfo({total:540, power:100, current:0});
+        cardInfo[1][4] = CardInfo({total: 10, power: 450, current: 0});
+        cardInfo[1][3] = CardInfo({total: 100, power: 200, current: 0});
+        cardInfo[1][2] = CardInfo({total: 150, power: 150, current: 0});
+        cardInfo[1][1] = CardInfo({total: 200, power: 120, current: 0});
+        cardInfo[1][0] = CardInfo({total: 540, power: 100, current: 0});
 
-        cardInfo[2][4] = CardInfo({total:10, power:450, current:0});
-        cardInfo[2][3] = CardInfo({total:100, power:200, current:0});
-        cardInfo[2][2] = CardInfo({total:150, power:150, current:0});
-        cardInfo[2][1] = CardInfo({total:200, power:120, current:0});
-        cardInfo[2][0] = CardInfo({total:540, power:100, current:0});
+        cardInfo[2][4] = CardInfo({total: 10, power: 450, current: 0});
+        cardInfo[2][3] = CardInfo({total: 100, power: 200, current: 0});
+        cardInfo[2][2] = CardInfo({total: 150, power: 150, current: 0});
+        cardInfo[2][1] = CardInfo({total: 200, power: 120, current: 0});
+        cardInfo[2][0] = CardInfo({total: 540, power: 100, current: 0});
 
-        cardInfo[3][4] = CardInfo({total:10, power:450, current:0});
-        cardInfo[3][3] = CardInfo({total:0, power:200, current:0});
-        cardInfo[3][2] = CardInfo({total:0, power:150, current:0});
-        cardInfo[3][1] = CardInfo({total:0, power:120, current:0});
-        cardInfo[3][0] = CardInfo({total:990, power:100, current:0});
-        
+        cardInfo[3][4] = CardInfo({total: 10, power: 450, current: 0});
+        cardInfo[3][3] = CardInfo({total: 0, power: 200, current: 0});
+        cardInfo[3][2] = CardInfo({total: 0, power: 150, current: 0});
+        cardInfo[3][1] = CardInfo({total: 0, power: 120, current: 0});
+        cardInfo[3][0] = CardInfo({total: 990, power: 100, current: 0});
     }
 
-    function setCardTotal(uint8 _category, uint8 _level, uint16 _total) public returns(bool) {
+    function setCardTotal(
+        uint8 _category,
+        uint8 _level,
+        uint16 _total
+    ) public returns (bool) {
         CardInfo storage card = cardInfo[_category][_level];
         card.total = _total;
         return true;
     }
 
-    function setCardPower(uint8 _category, uint8 _level, uint16 _power) public returns(bool) {
+    function setCardPower(
+        uint8 _category,
+        uint8 _level,
+        uint16 _power
+    ) public returns (bool) {
         CardInfo storage card = cardInfo[_category][_level];
         card.power = _power;
         return true;
@@ -119,26 +133,102 @@ contract ERC721Card is
         return nftCategory[id];
     }
 
-    function cardView(uint8 _category, uint8 _level) external view returns (
-        uint16 total,
-        uint16 current,
-        uint16 power
-    ) {
+    function cardView(uint8 _category, uint8 _level)
+        external
+        view
+        returns (
+            uint16 total,
+            uint16 current,
+            uint16 power
+        )
+    {
         CardInfo memory card = cardInfo[_category][_level];
         return (card.total, card.current, card.power);
     }
 
-    function getCard(uint256 id) external view returns (
-        uint16 category,
-        uint16 level,
-        uint16 power,
-        address owner
-    ) {
+    function getCard(uint256 id)
+        external
+        view
+        returns (
+            uint16 category,
+            uint16 level,
+            uint16 power,
+            address owner
+        )
+    {
         CardInfo memory card = cardInfo[nftCategory[id]][nftLevel[id]];
         return (nftCategory[id], nftLevel[id], card.power, ownerOf(id));
     }
 
-    function mintWithLevel(uint8 _category, uint8 _level, address to) public returns(bool){
+    // Get a random1 100
+    function random() private view returns (uint8) {
+        return
+            uint8(
+                uint256(
+                    keccak256(
+                        abi.encodePacked(block.timestamp, block.difficulty)
+                    )
+                ) % 1000
+            );
+    }
+
+    function getAvailableCard(uint8 _category)
+        private
+        view
+        returns (uint8, uint16)
+    {
+        uint16 rand = random();
+        uint8 level = 0;
+        if (rand > (200 + 150 + 100 + 10)) {
+            level = 0;
+        } else if (rand > (150 + 100 + 10)) {
+            level = 1;
+        } else if (rand > (100 + 10)) {
+            level = 2;
+        } else if (rand < 10) {
+            level = 3;
+        } else {
+            level = 4;
+        }
+
+        for (int8 i = int8(level); i >= 0; i--) {
+            uint8 l = uint8(i);
+            CardInfo memory card = cardInfo[_category][l];
+            if (card.current + 1 <= card.total) {
+                return (level, card.current + 1);
+            }
+        }
+        return (0, 0);
+    }
+
+    function mintCard(uint8 _category, address to) public returns (bool) {
+        (uint8 level, uint16 current) = getAvailableCard(_category);
+        require(current > 0, "No valid card");
+        CardInfo storage card = cardInfo[_category][level];
+
+        if (card.current + 1 < card.total) {
+            card.current += 1;
+            uint256 id = mint(to);
+            nftLevel[id] = level;
+            nftCategory[id] = _category;
+            emit MintWithLevel(
+                msg.sender,
+                to,
+                _category,
+                level,
+                id,
+                block.timestamp
+            );
+        }
+
+        return true;
+    }
+
+    function mintWithLevel(
+        uint8 _category,
+        uint8 _level,
+        address to
+    ) public returns (bool) {
         require(_level < 5, "Level exceed the limit of 5");
         CardInfo storage level = cardInfo[_category][_level];
         if (level.current + 1 < level.total) {
@@ -146,9 +236,16 @@ contract ERC721Card is
             uint256 id = mint(to);
             nftLevel[id] = _level;
             nftCategory[id] = _category;
-            emit MintWithLevel(msg.sender, to,_category, _level, id, block.timestamp);
+            emit MintWithLevel(
+                msg.sender,
+                to,
+                _category,
+                _level,
+                id,
+                block.timestamp
+            );
         }
-        
+
         return true;
     }
 
@@ -163,8 +260,11 @@ contract ERC721Card is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(address to) private returns (uint256){
-        require(hasRole(MINTER_ROLE, _msgSender()), "ERC721PresetMinterPauserAutoId: must have minter role to mint");
+    function mint(address to) private returns (uint256) {
+        require(
+            hasRole(MINTER_ROLE, _msgSender()),
+            "ERC721PresetMinterPauserAutoId: must have minter role to mint"
+        );
 
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.
@@ -184,7 +284,10 @@ contract ERC721Card is
      * - the caller must have the `PAUSER_ROLE`.
      */
     function pause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC721PresetMinterPauserAutoId: must have pauser role to pause");
+        require(
+            hasRole(PAUSER_ROLE, _msgSender()),
+            "ERC721PresetMinterPauserAutoId: must have pauser role to pause"
+        );
         _pause();
     }
 
@@ -198,7 +301,10 @@ contract ERC721Card is
      * - the caller must have the `PAUSER_ROLE`.
      */
     function unpause() public virtual {
-        require(hasRole(PAUSER_ROLE, _msgSender()), "ERC721PresetMinterPauserAutoId: must have pauser role to unpause");
+        require(
+            hasRole(PAUSER_ROLE, _msgSender()),
+            "ERC721PresetMinterPauserAutoId: must have pauser role to unpause"
+        );
         _unpause();
     }
 
@@ -222,5 +328,4 @@ contract ERC721Card is
     {
         return super.supportsInterface(interfaceId);
     }
-
 }

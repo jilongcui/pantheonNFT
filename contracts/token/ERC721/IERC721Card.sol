@@ -8,24 +8,36 @@ import "./ERC721.sol";
  * @dev Required interface of an ERC721 compliant contract.
  */
 interface IERC721Card is IERC721 {
-
-    struct LevelInfo {
+    struct CardInfo {
         uint16 total;
         uint16 current;
         uint16 power;
     }
-    
-    event MintWithLevel(address indexed to, uint16 level, uint256 id);
+
+    event MintWithLevel(
+        address indexed from,
+        address indexed to,
+        uint16 category,
+        uint16 level,
+        uint256 id,
+        uint256 timestamp
+    );
 
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
      */
-    function levelOf(uint256 id) external view returns (uint8 level);
+    function levelOf(uint8 _category, uint256 id)
+        external
+        view
+        returns (uint8 level);
 
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
      */
-    function levelView(uint8 level) external view returns (LevelInfo memory);
+    function cardView(uint8 _category, uint8 level)
+        external
+        view
+        returns (CardInfo memory);
 
     /**
      * @dev Returns the owner of the `tokenId` token.
@@ -34,5 +46,18 @@ interface IERC721Card is IERC721 {
      *
      * - `tokenId` must exist.
      */
-    function mintWithLevel(uint8 _level, address to) external returns(bool);
+    function mintWithLevel(
+        uint8 _category,
+        uint8 _level,
+        address to
+    ) external returns (bool);
+    
+    /**
+     * @dev Returns the owner of the `tokenId` token.
+     *
+     * Requirements:
+     *
+     * - `tokenId` must exist.
+     */
+    function mintCard(uint8 _category, address to) public returns (bool)
 }
