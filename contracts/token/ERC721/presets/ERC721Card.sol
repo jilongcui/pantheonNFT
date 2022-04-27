@@ -41,15 +41,16 @@ contract ERC721Card is
 
     string private _baseTokenURI;
 
-    struct LevelInfo {
+    struct CardInfo {
         uint16 total;
         uint16 current;
         uint16 power;
     }
+    mapping(uint256 => uint8) nftCategory;
     mapping(uint256 => uint8) nftLevel;
-    mapping(uint8 => LevelInfo) levelInfo;
+    mapping(uint8 => mapping(uint8 => CardInfo)) cardInfo;
 
-    event MintWithLevel(address indexed from, address indexed to, uint16 level, uint256 id, uint256 timestamp);
+    event MintWithLevel(address indexed from, address indexed to, uint16 category, uint16 level, uint256 id, uint256 timestamp);
 
     /**
      * @dev Grants `DEFAULT_ADMIN_ROLE`, `MINTER_ROLE` and `PAUSER_ROLE` to the
@@ -70,15 +71,40 @@ contract ERC721Card is
         _setupRole(PAUSER_ROLE, adminAddress);
         _setupRole(MINTER_ROLE, adminAddress);
         _setupRole(MINTER_ROLE, _msgSender());
-        setLevelInfo();
+        setCardInfo();
     }
 
-    function setLevelInfo() internal {
-        levelInfo[0] = LevelInfo({total:64000, power:100, current:0});
-        levelInfo[1] = LevelInfo({total:18000, power:150, current:0});
-        levelInfo[2] = LevelInfo({total:1800, power:300, current:0});
-        levelInfo[3] = LevelInfo({total:900, power:600, current:0});
-        levelInfo[4] = LevelInfo({total:300, power:1500, current:0});
+    function setCardInfo() internal {
+        cardInfo[1][4] = CardInfo({total:10, power:450, current:0});
+        cardInfo[1][3] = CardInfo({total:100, power:200, current:0});
+        cardInfo[1][2] = CardInfo({total:150, power:150, current:0});
+        cardInfo[1][1] = CardInfo({total:200, power:120, current:0});
+        cardInfo[1][0] = CardInfo({total:540, power:100, current:0});
+
+        cardInfo[2][4] = CardInfo({total:10, power:450, current:0});
+        cardInfo[2][3] = CardInfo({total:100, power:200, current:0});
+        cardInfo[2][2] = CardInfo({total:150, power:150, current:0});
+        cardInfo[2][1] = CardInfo({total:200, power:120, current:0});
+        cardInfo[2][0] = CardInfo({total:540, power:100, current:0});
+
+        cardInfo[3][4] = CardInfo({total:10, power:450, current:0});
+        cardInfo[3][3] = CardInfo({total:0, power:200, current:0});
+        cardInfo[3][2] = CardInfo({total:0, power:150, current:0});
+        cardInfo[3][1] = CardInfo({total:0, power:120, current:0});
+        cardInfo[3][0] = CardInfo({total:990, power:100, current:0});
+        
+    }
+
+    function setCardTotal(uint8 _category, uint8 _level, uint16 _total) public returns(bool) {
+        CardInfo storage card = cardInfo[_category][_level];
+        card.total = _total;
+        return true;
+    }
+
+    function setCardPower(uint8 _category, uint8 _level, uint16 _power) public returns(bool) {
+        CardInfo storage card = cardInfo[_category][_level];
+        card.power = _power;
+        return true;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
@@ -89,23 +115,38 @@ contract ERC721Card is
         return nftLevel[id];
     }
 
-    function levelView(uint8 level) external view returns (
+    function categoryOf(uint256 id) external view returns (uint8 category) {
+        return nftCategory[id];
+    }
+
+    function cardView(uint8 _category, uint8 _level) external view returns (
         uint16 total,
         uint16 current,
         uint16 power
     ) {
-        LevelInfo memory leve = levelInfo[level];
-        return (leve.total, leve.current, leve.power);
+        CardInfo memory card = cardInfo[_category][_level];
+        return (card.total, card.current, card.power);
     }
 
-    function mintWithLevel(uint8 _level, address to) public returns(bool){
+    function getCard(uint256 id) external view returns (
+        uint16 category,
+        uint16 level,
+        uint16 power,
+        address owner
+    ) {
+        CardInfo memory card = cardInfo[nftCategory[id]][nftLevel[id]];
+        return (nftCategory[id], nftLevel[id], card.power, ownerOf(id));
+    }
+
+    function mintWithLevel(uint8 _category, uint8 _level, address to) public returns(bool){
         require(_level < 5, "Level exceed the limit of 5");
-        LevelInfo storage level = levelInfo[_level];
-        if (level.current < level.total -1) {
+        CardInfo storage level = cardInfo[_category][_level];
+        if (level.current + 1 < level.total) {
             level.current += 1;
             uint256 id = mint(to);
             nftLevel[id] = _level;
-            emit MintWithLevel(msg.sender, to, _level, id, block.timestamp);
+            nftCategory[id] = _category;
+            emit MintWithLevel(msg.sender, to,_category, _level, id, block.timestamp);
         }
         
         return true;
