@@ -31,6 +31,14 @@ interface IERC721Card is IERC721 {
         view
         returns (uint8 level);
 
+     /**
+     * @dev Returns the number of tokens in ``owner``'s account.
+     */
+    function powerOf(uint8 _category, uint256 id)
+        external
+        view
+        returns (uint8 power);
+
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
      */
@@ -51,7 +59,7 @@ interface IERC721Card is IERC721 {
         uint8 _level,
         address to
     ) external returns (bool);
-    
+
     /**
      * @dev Returns the owner of the `tokenId` token.
      *

@@ -48,6 +48,7 @@ contract ERC721Card is
     }
     mapping(uint256 => uint8) nftCategory;
     mapping(uint256 => uint8) nftLevel;
+    mapping(uint256 => uint16) nftPower;
     mapping(uint8 => mapping(uint8 => CardInfo)) cardInfo;
 
     event MintWithLevel(
@@ -129,6 +130,10 @@ contract ERC721Card is
         return nftLevel[id];
     }
 
+    function powerOf(uint256 id) external view returns (uint8 level) {
+        return nftLevel[id];
+    }
+
     function categoryOf(uint256 id) external view returns (uint8 category) {
         return nftCategory[id];
     }
@@ -190,12 +195,20 @@ contract ERC721Card is
         } else {
             level = 4;
         }
-
+        // look up downward
         for (int8 i = int8(level); i >= 0; i--) {
             uint8 l = uint8(i);
             CardInfo memory card = cardInfo[_category][l];
             if (card.current + 1 <= card.total) {
-                return (level, card.current + 1);
+                return (l, card.current + 1);
+            }
+        }
+        // look up upword
+        for (int8 i = int8(level + 1); i <= 4; i++) {
+            uint8 l = uint8(i);
+            CardInfo memory card = cardInfo[_category][l];
+            if (card.current + 1 <= card.total) {
+                return (l, card.current + 1);
             }
         }
         return (0, 0);
@@ -210,6 +223,7 @@ contract ERC721Card is
             card.current += 1;
             uint256 id = mint(to);
             nftLevel[id] = level;
+            nftPower[id] = card.power;
             nftCategory[id] = _category;
             emit MintWithLevel(
                 msg.sender,
@@ -235,6 +249,7 @@ contract ERC721Card is
             level.current += 1;
             uint256 id = mint(to);
             nftLevel[id] = _level;
+            nftPower[id] = card.power;
             nftCategory[id] = _category;
             emit MintWithLevel(
                 msg.sender,
