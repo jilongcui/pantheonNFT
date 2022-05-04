@@ -74,29 +74,23 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
     uint256 public accChaPerShare; // Accumulated CHAs per share, times 1e12. See below.
     // Total power
     uint256 public totalPower;
-    uint16[] public nftRate = [100, 150, 300, 600, 1500]; // times 1000
 
     IERC20 public panToken;
-    IERC20 public usdtToken;
     // Dev address.
     address public devaddr;
     address public blackholeAddress;
-    address public airdropAddress;
     address public liquidAddress;
     uint256 public totalReward;
     // Total released reward
     uint256 public releasedReward;
     // CHA tokens created per block.
     uint256 public chaPerBlock;
-    // Bonus muliplier for early panToken makers.
-    uint256 public constant BONUS_MULTIPLIER = 10;
-    // The migrator contract. It has a lot of power. Can only be set through governance (owner).
-    // IMigratorChef public migrator;
     // Info of each pool.
     PoolInfo[] public poolInfo;
     // Info of each user that stakes LP tokens.
     mapping(address => uint256) public userPower;
-    mapping(uint256 => mapping(address => MinerInfo)) public minerInfo;
+    mapping(address => uint16) public minerCount;
+    mapping(address => mapping(uint256 => MinerInfo)) public minerInfo;
     // Total allocation poitns. Must be the sum of all allocation points in all pools.
     uint256 public totalAllocPoint = 0;
     // The block number when CHA mining starts.
@@ -121,15 +115,12 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
     constructor(
         IERC20 _chaAddress,
         IERC721Card _nftAddress,
-        address beneficancy,
-        address _blackholeAddress,
+        uint256 _chaPerBlock,
         uint256 _startBlock,
         uint256 _totalReward
     ) {
         panToken = _chaAddress;
-        liquidAddress = _liquidAddress;
         chaPerBlock = _chaPerBlock;
-        // bonusEndBlock = _bonusEndBlock;
         startBlock = _startBlock;
         totalReward = _totalReward;
         nftToken = IERC721Card(_nftAddress);
@@ -137,14 +128,6 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         // totalAllocPoint = totalAllocPoint.add(_allocPoint);
         totalPower = 0;
     }
-
-    // function totalReward() external view returns (uint256) {
-    //     return totalReward;
-    // }
-
-    // function releasedReward() external view returns (uint256) {
-    //     return releasedReward;
-    // }
 
     function releaseReward2() external view returns (uint256) {
         return totalPower.mul(accChaPerShare).div(1e12);
@@ -198,14 +181,22 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
     //     migrator = _migrator;
     // }
 
+    function getMultiplier(uint256 _from, uint256 _to)
+        public
+        pure
+        returns (uint256)
+    {
+        return _to.sub(_from);
+    }
+
     // View function to see pending CHA on frontend.
-    function pendingReward(uint256 _pid, address _user)
+    function pendingReward(address _user, uint256 _pid)
         external
         view
         returns (uint256)
     {
         // PoolInfo storage pool = poolInfo[_pid];
-        MinerInfo storage miner = minerInfo[_pid][_user];
+        MinerInfo storage miner = minerInfo[_user][_pid];
         uint256 accCha = accChaPerShare;
         uint256 endBlock = block.number;
         if (block.number > miner.endBlock) {
@@ -233,7 +224,7 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         // PoolInfo storage pool = poolInfo[_pid];
         // uint256 remain = panToken.balanceOf(address(this));
         uint256 remain = totalReward.sub(releasedReward);
-        if (block.number <= lastRewardBlock && remain <= 0) {
+        if (remain <= 0) {
             return;
         }
         if (totalPower == 0) {
@@ -243,8 +234,6 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         require(lastRewardBlock <= block.number, "lastRewardBlock not valid");
         uint256 multiplier = getMultiplier(lastRewardBlock, block.number);
         uint256 chaReward = multiplier.mul(chaPerBlock);
-        // panToken.mint(devaddr, chaReward.div(10));
-        // panToken.mint(address(this), chaReward);
         if (remain < chaReward) {
             chaReward = remain;
         }
@@ -264,8 +253,16 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         uint16 nft3
     ) public {
         PoolInfo storage pool = poolInfo[_pid];
-        MinerInfo memory miner = minerInfo[_pid][msg.sender];
-        // require(miner.amount == 0, "You already depsoit this pool.");
+        uint256 count = minerCount[msg.sender];
+        MinerInfo memory miner = minerInfo[msg.sender][count];
+        require(
+            countday >= 7 && countday <= 30,
+            "Depsite count day should between 7 and 30."
+        );
+        require(
+            nft1 > 0 && nft2 > 0 && nft3 > 0,
+            "Depsite nft 1 2 3 should be empty."
+        );
         updateReward();
 
         uint256 power = 0;
@@ -284,19 +281,21 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         uint256 amount = 1000; // 1USDT = 1000 DOGEFOOD
         totalPower = totalPower.add(power);
         uint256 blockNumber = block.number;
-        miner.powerRate = power;
-        miner.endBlock = blockNumber.add(countday * 1200);
+        miner.power = power;
+        miner.endBlock = blockNumber.add(countday * 24 * 1200);
         miner.nft1 = uint16(nft1);
         miner.nft2 = uint16(nft2);
         miner.nft3 = uint16(nft3);
-        minerInfo[_pid][msg.sender] = miner;
+        miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
+
+        minerInfo[msg.sender][count] = miner;
         emit DepositWithNFT(msg.sender, _pid, power, nft1, nft2, nft3);
     }
 
     // harvest LP tokens from DogeFoodPool.
     function harvest(uint256 _pid) public {
         // PoolInfo storage pool = poolInfo[_pid];
-        MinerInfo storage miner = minerInfo[_pid][msg.sender];
+        MinerInfo storage miner = minerInfo[msg.sender][_pid];
         updateReward();
         uint256 pending = miner.power.mul(accChaPerShare).div(1e12).sub(
             miner.rewardDebt
@@ -310,19 +309,19 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
     // Withdraw LP tokens from DogeFoodPool.
     function withdraw(uint256 _pid, uint256 _amount) public {
         PoolInfo storage pool = poolInfo[_pid];
-        MinerInfo storage miner = minerInfo[_pid][msg.sender];
-        require(miner.amount > _amount, "withdraw: not good");
+        MinerInfo storage miner = minerInfo[msg.sender][_pid];
         require(
             miner.endBlock <= block.number,
             "Cannot withdraw with days limit."
         );
+        require(accChaPerShare > 0, "accChaPerShare should not be zero");
         updateReward();
-        if (miner.amount.mul(accChaPerShare).div(1e12) > miner.rewardDebt) {}
-        uint256 pending = miner.power.mul().div(1000);
-        safeChaTransfer(msg.sender, pending);
-        // miner.rewardDebt = miner.power.mul(accChaPerShare).div(1e12);
-        // userLevel[msg.sender] = getUserLevel(userPower[msg.sender]);
-        pool.lpToken.transfer(address(msg.sender), _amount);
+        if (miner.amount.mul(accChaPerShare).div(1e12) > miner.rewardDebt) {
+            uint256 pending = miner.amount.mul(accChaPerShare).div(1e12).sub(
+                miner.rewardDebt
+            );
+            safeChaTransfer(msg.sender, pending);
+        }
 
         if (miner.nft1 > 0) {
             nftToken.safeTransferFrom(address(this), msg.sender, miner.nft1);
@@ -341,7 +340,6 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         userPower[msg.sender] = userPower[msg.sender].sub(miner.power);
         //  reduce amount
         miner.power = 0;
-        miner.amount = 0;
         miner.nft1 = 0;
         miner.nft2 = 0;
         miner.nft3 = 0;
@@ -358,9 +356,7 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
             _amount = chaBal;
         }
         panToken.transfer(blackholeAddress, _amount.mul(5).div(100));
-        panToken.transfer(airdropAddress, _amount.mul(4).div(100));
-        panToken.transfer(liquidAddress, _amount.mul(4).div(100));
+        // panToken.transfer(liquidAddress, _amount.mul(4).div(100));
         panToken.transfer(_to, _amount.sub(_amount.mul(13).div(100)));
-        if (inviteForce) calculeInviteReward(_to, _amount);
     }
 }

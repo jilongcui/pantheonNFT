@@ -49,6 +49,7 @@ contract ERC721Card is
     mapping(uint256 => uint8) nftCategory;
     mapping(uint256 => uint8) nftLevel;
     mapping(uint256 => uint16) nftPower;
+    // CardInfo struct as [category][level][cardInfo]
     mapping(uint8 => mapping(uint8 => CardInfo)) cardInfo;
 
     event MintWithLevel(
@@ -130,15 +131,15 @@ contract ERC721Card is
         return nftLevel[id];
     }
 
-    function powerOf(uint256 id) external view returns (uint8 level) {
-        return nftLevel[id];
+    function powerOf(uint256 id) external view returns (uint16 power) {
+        return nftPower[id];
     }
 
     function categoryOf(uint256 id) external view returns (uint8 category) {
         return nftCategory[id];
     }
 
-    function cardView(uint8 _category, uint8 _level)
+    function cardCategory(uint8 _category, uint8 _level)
         external
         view
         returns (
@@ -165,7 +166,7 @@ contract ERC721Card is
         return (nftCategory[id], nftLevel[id], card.power, ownerOf(id));
     }
 
-    // Get a random1 100
+    // Get a random 100
     function random() private view returns (uint8) {
         return
             uint8(
@@ -190,7 +191,7 @@ contract ERC721Card is
             level = 1;
         } else if (rand > (100 + 10)) {
             level = 2;
-        } else if (rand < 10) {
+        } else if (rand > 10) {
             level = 3;
         } else {
             level = 4;
@@ -203,7 +204,7 @@ contract ERC721Card is
                 return (l, card.current + 1);
             }
         }
-        // look up upword
+        // look up upward
         for (int8 i = int8(level + 1); i <= 4; i++) {
             uint8 l = uint8(i);
             CardInfo memory card = cardInfo[_category][l];
@@ -214,21 +215,21 @@ contract ERC721Card is
         return (0, 0);
     }
 
-    function mintCard(uint8 _category, address to) public returns (bool) {
-        (uint8 level, uint16 current) = getAvailableCard(_category);
+    function mintCard(uint8 category, address to) public returns (bool) {
+        (uint8 level, uint16 current) = getAvailableCard(category);
         require(current > 0, "No valid card");
-        CardInfo storage card = cardInfo[_category][level];
+        CardInfo storage card = cardInfo[category][level];
 
         if (card.current + 1 < card.total) {
             card.current += 1;
             uint256 id = mint(to);
             nftLevel[id] = level;
             nftPower[id] = card.power;
-            nftCategory[id] = _category;
+            nftCategory[id] = category;
             emit MintWithLevel(
                 msg.sender,
                 to,
-                _category,
+                category,
                 level,
                 id,
                 block.timestamp
@@ -249,7 +250,7 @@ contract ERC721Card is
             level.current += 1;
             uint256 id = mint(to);
             nftLevel[id] = _level;
-            nftPower[id] = card.power;
+            nftPower[id] = level.power;
             nftCategory[id] = _category;
             emit MintWithLevel(
                 msg.sender,

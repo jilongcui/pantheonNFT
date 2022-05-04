@@ -26,18 +26,12 @@ interface IERC721Card is IERC721 {
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
      */
-    function levelOf(uint8 _category, uint256 id)
-        external
-        view
-        returns (uint8 level);
+    function levelOf(uint256 id) external view returns (uint8 level);
 
-     /**
+    /**
      * @dev Returns the number of tokens in ``owner``'s account.
      */
-    function powerOf(uint8 _category, uint256 id)
-        external
-        view
-        returns (uint8 power);
+    function powerOf(uint256 id) external view returns (uint8 power);
 
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
@@ -67,5 +61,5 @@ interface IERC721Card is IERC721 {
      *
      * - `tokenId` must exist.
      */
-    function mintCard(uint8 _category, address to) public returns (bool)
+    function mintCard(uint8 _category, address to) external returns (bool);
 }
