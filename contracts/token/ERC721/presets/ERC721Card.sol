@@ -178,6 +178,19 @@ contract ERC721Card is
             );
     }
 
+    // Get a SerialNo
+    function getSerialNo(uint8 category, uint16 current)
+        private
+        view
+        returns (uint32)
+    {
+        return
+            uint32(
+                uint256(keccak256(abi.encodePacked(category, current))) %
+                    1000000000
+            );
+    }
+
     function getAvailableCard(uint8 _category)
         private
         view
@@ -212,31 +225,29 @@ contract ERC721Card is
                 return (l, card.current + 1);
             }
         }
-        return (0, 0);
+        revert("No available card");
     }
 
-    function mintCard(uint8 category, address to) public returns (bool) {
+    function mintCard(uint8 category, address to) public returns (uint256) {
         (uint8 level, uint16 current) = getAvailableCard(category);
-        require(current > 0, "No valid card");
         CardInfo storage card = cardInfo[category][level];
+        uint256 id = 0;
+        require(card.current + 1 < card.total, "This level card is mint out");
+        card.current += 1;
+        id = mint(to);
+        nftLevel[id] = level;
+        nftPower[id] = card.power;
+        nftCategory[id] = category;
+        emit MintWithLevel(
+            msg.sender,
+            to,
+            category,
+            level,
+            id,
+            block.timestamp
+        );
 
-        if (card.current + 1 < card.total) {
-            card.current += 1;
-            uint256 id = mint(to);
-            nftLevel[id] = level;
-            nftPower[id] = card.power;
-            nftCategory[id] = category;
-            emit MintWithLevel(
-                msg.sender,
-                to,
-                category,
-                level,
-                id,
-                block.timestamp
-            );
-        }
-
-        return true;
+        return id;
     }
 
     function mintWithLevel(

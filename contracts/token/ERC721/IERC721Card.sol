@@ -61,5 +61,5 @@ interface IERC721Card is IERC721 {
      *
      * - `tokenId` must exist.
      */
-    function mintCard(uint8 _category, address to) external returns (bool);
+    function mintCard(uint8 _category, address to) external returns (uint256);
 }

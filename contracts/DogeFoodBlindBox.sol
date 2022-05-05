@@ -17,11 +17,12 @@ contract DogeFoodBlindBox is Ownable {
     }
     //
     struct BBox {
-        IERC721Card nftToken;
+        address nftToken;
         address tokenAddr;
         uint256 tokenValue;
         uint256 startTimestamp;
         uint256 endTimestamp;
+        uint8 category;
         uint16 total;
         uint16 current;
         BBoxStatus status;
@@ -41,9 +42,11 @@ contract DogeFoodBlindBox is Ownable {
     //   uint timestamp;
     // }
 
-    event BBoxSoldEvent(
+    event BBoxOpenEvent(
         address to,
+        uint32 serialNo,
         uint8 category,
+        uint256 nftId,
         BBoxStatus status,
         uint16 current,
         uint16 total
@@ -92,6 +95,11 @@ contract DogeFoodBlindBox is Ownable {
         box.endTimestamp = end;
     }
 
+    function setBBoxCategory(uint8 pid, uint8 category) public onlyOwner {
+        BBox storage box = bboxes[pid];
+        box.category = category;
+    }
+
     function setBBoxTotal(uint8 pid, uint16 total) public onlyOwner {
         BBox storage box = bboxes[pid];
         box.total = total;
@@ -100,7 +108,7 @@ contract DogeFoodBlindBox is Ownable {
     function setBBoxNftToken(uint8 pid, address _nftAddress) public onlyOwner {
         require(_nftAddress != address(0));
         BBox storage box = bboxes[pid];
-        box.nftToken = IERC721Card(_nftAddress);
+        box.nftToken = _nftAddress;
     }
 
     function setBBoxStatus(uint8 pid, BBoxStatus status) public onlyOwner {
@@ -109,30 +117,47 @@ contract DogeFoodBlindBox is Ownable {
     }
 
     function setBBoxInfo(
-        uint8 pid,
+        uint8 category,
         address _nftAddress,
         address tokenAddr,
         uint256 tokenValue,
         uint16 total,
         uint256 startTime,
         uint256 endTime
-    ) public onlyOwner {
-        bboxes[pid] = BBox({
-            nftToken: IERC721Card(_nftAddress),
-            tokenAddr: tokenAddr,
-            tokenValue: tokenValue,
-            total: total,
-            current: 0,
-            startTimestamp: startTime,
-            endTimestamp: endTime,
-            status: BBoxStatus.BLINDBOX_INIT
-        });
+    ) public onlyOwner returns (uint8 pid) {
+        bboxes.push(
+            BBox({
+                nftToken: _nftAddress,
+                tokenAddr: tokenAddr,
+                tokenValue: tokenValue,
+                category: category,
+                total: total,
+                current: 0,
+                startTimestamp: startTime,
+                endTimestamp: endTime,
+                status: BBoxStatus.BLINDBOX_INIT
+            })
+        );
+        return uint8(bboxes.length - 1);
+    }
+
+    // Get a SerialNo
+    function getSerialNo(uint8 category, uint16 current)
+        private
+        view
+        returns (uint32)
+    {
+        return
+            uint32(
+                uint256(keccak256(abi.encodePacked(category, current))) %
+                    1000000000
+            );
     }
 
     // 购买BBox
     // 两种支付方式，一种是通过BNB本币购买，一种是通过代币购买，判断的依据是代币地址是否为空
     // 购买的代币会被转移到收款地址上
-    function buyBBox(uint8 pid) public payable returns (bool) {
+    function openBBox(uint8 pid) public payable returns (bool) {
         uint256 timestamp = block.timestamp;
         BBox storage box = bboxes[pid];
         require(box.current < box.total, "No remain bbox supply");
@@ -159,8 +184,20 @@ contract DogeFoodBlindBox is Ownable {
         if (box.current == box.total) {
             box.status = BBoxStatus.BLINDBOX_SOLDOUT;
         }
-        box.nftToken.mintCard(pid, msg.sender);
-        emit BBoxSoldEvent(msg.sender, pid, box.status, box.current, box.total);
+        uint32 serialNo = getSerialNo(box.category, box.current);
+        uint256 nftId = IERC721Card(box.nftToken).mintCard(
+            box.category,
+            msg.sender
+        );
+        emit BBoxOpenEvent(
+            msg.sender,
+            serialNo,
+            box.category,
+            nftId,
+            box.status,
+            box.current,
+            box.total
+        );
         return true;
     }
 
@@ -181,6 +218,31 @@ contract DogeFoodBlindBox is Ownable {
         if (timestamp >= box.startTimestamp && timestamp < box.endTimestamp)
             return true;
         else return false;
+    }
+
+    function getBBox(uint8 id)
+        external
+        view
+        returns (
+            uint8 category,
+            uint16 current,
+            uint16 total,
+            address tokenAddr,
+            uint256 tokenValue,
+            uint256 startTimestamp,
+            uint256 endTimestamp
+        )
+    {
+        BBox memory bbox = bboxes[id];
+        return (
+            bbox.category,
+            bbox.current,
+            bbox.total,
+            bbox.tokenAddr,
+            bbox.tokenValue,
+            bbox.startTimestamp,
+            bbox.endTimestamp
+        );
     }
 
     // function getBBoxRemain() public view returns (uint256, uint256) {
