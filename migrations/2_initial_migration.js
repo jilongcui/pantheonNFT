@@ -33,7 +33,10 @@ module.exports = async function (deployer, network, accounts) {
 
     // airdropAddress = accounts[1];
     // Deploy USDT
-    await deployer.deploy(ERC20PresetFixedSupply, "USDT Token", "USDT", 1000000, accounts[0]);
+    await deployer.deploy(ERC20PresetFixedSupply, "DogeFood Token", "DogeFood", 1000000, accounts[0]);
+
+    // Deploy BlindBox
+    await deployer.deploy(DogeFoodBlindBox, accounts[0]);
 
     // Deploy Pool
     chaPerBlock = web3.utils.toWei("50000") / 24 / 1200;
@@ -73,7 +76,9 @@ module.exports = async function (deployer, network, accounts) {
     beneficancy = "0xb905BbD447325394d34957cB73c57Ec6aF075447";
     pancakeRouter = "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3";
     await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.pantheon.best/tokens/");
-    await deployer.deploy(ERC20PresetFixedSupply, "USDT Token", "USDT", 1000000, accounts[0]);
+    await deployer.deploy(ERC20PresetFixedSupply, "DogeFood Token", "DogeFood", 100000000000, accounts[0]);
+    // Deploy BlindBox
+    await deployer.deploy(DogeFoodBlindBox, accounts[0]);
     // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
     // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, liquidAddress, 200000000, accounts[0]);
 

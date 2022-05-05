@@ -8,32 +8,8 @@ const DogeFoodSoloPool = artifacts.require("DogeFoodSoloPool");
 
 async function initNFT(network, accounts) {
     let erc721 = await ERC721Card.deployed();
-
-    let account1 = "0x3578ca6f43fD3C468c6E16DBC1ebec2f100030F6";
-    let account2 = "0x95C65C0752b64B8Df8B749Dd096b47c473eba561";
-
-    await erc721.mintWithLevel(0, accounts[0]);
-    await erc721.mintWithLevel(1, accounts[0]);
-    await erc721.mintWithLevel(2, accounts[0]);
-    await erc721.mintWithLevel(3, accounts[0]);
-    await erc721.mintWithLevel(4, accounts[0]);
-
-    await erc721.mintWithLevel(0, accounts[1]);
-    await erc721.mintWithLevel(1, accounts[1]);
-    await erc721.mintWithLevel(2, accounts[1]);
-    await erc721.mintWithLevel(3, accounts[1]);
-    await erc721.mintWithLevel(4, accounts[1]);
-
-    await erc721.mintWithLevel(0, accounts[2]);
-    await erc721.mintWithLevel(1, accounts[2]);
-    await erc721.mintWithLevel(2, accounts[2]);
-    await erc721.mintWithLevel(3, accounts[2]);
-    await erc721.mintWithLevel(4, accounts[2]);
-
-    console.log((await erc721.balanceOf(accounts[0])).toNumber());
-    console.log((await erc721.balanceOf(account1)).toNumber());
-    console.log((await erc721.balanceOf(account2)).toNumber());
-    console.log("110");
+    const MinterRoler = web3.utils.keccak256('MINTER_ROLE')
+    await erc721.grantRole(MinterRoler, DogeFoodBlindBox.address);
 }
 
 async function initIDO() {
@@ -45,6 +21,15 @@ async function initIDO() {
     await deployer.deploy(PantheonIDO, panToken.address, beneficancy, idoStart, idoEnd, claimStart, claimEnd);
     let ido = await PantheonIDO.deployed();
     await panToken.transfer(ido.address, web3.utils.toWei("400000"));
+}
+
+async function initBlindBox(category, tokenAddress, tokenValue, totalSupply, startTime, endTime) {
+
+    let blindBox = await DogeFoodBlindBox.deployed();
+    let erc721Card = await ERC721Card.deployed();
+
+    await blindBox.setBBoxInfo(category, erc721Card.address, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    // console.log("BlindBox pid = ", pid);
 }
 
 async function initUSDT() {
@@ -162,7 +147,25 @@ async function initPanToken() {
     console.log("114");
 }
 
+function toTimestamp(strDate) {
+    var datum = Date.parse(strDate);
+    return datum / 1000;
+}
+
 module.exports = async function (deployer, network, accounts) {
-    // await initNFT(network, accounts);
+    await initNFT(network, accounts);
     // await initUSDT(network, accounts);
+    let zeroAddress = "0x0000000000000000000000000000000000000000";
+    let dogeToken = await ERC20PresetFixedSupply.deployed();
+    let startTime = toTimestamp("2021-08-19 15:00:00");
+    let endTime = toTimestamp("2022-08-29 23:00:00");
+    let totalSupply = 1000;
+    // Init token and price
+
+    tokenAddress = dogeToken.address; // DogeFood Address
+    tokenValue = web3.utils.toWei("37107"); // $0.00000000000269484
+    await initBlindBox(1, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    await initBlindBox(2, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    tokenValue = web3.utils.toWei("0.35"); // 0.35 BNB
+    await initBlindBox(3, zeroAddress, tokenValue, totalSupply, startTime, endTime);
 }
