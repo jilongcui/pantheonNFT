@@ -5,6 +5,7 @@ const DogeFoodPool = artifacts.require("DogeFoodSoloPool");
 const ERC20PresetFixedSupply = artifacts.require("ERC20PresetFixedSupply");
 const ERC721 = artifacts.require("ERC721");
 const ERC20 = artifacts.require("ERC20");
+var wait = require('./wait')
 
 /*
  * uncomment accounts to access the test accounts made available by the
@@ -43,8 +44,9 @@ contract("DogeFoodPool", function (accounts) {
     console.log("afterEach");
   });
 
-  it("Check deploy two NFT deployed", async function () {
+  it("Check mint 3 NFTs", async function () {
     const to = accounts[0];
+    await nft.mintCard(1, to);
     await nft.mintCard(1, to);
     const owner0 = await nft.ownerOf.call(0);
     assert.equal(owner0, to);
@@ -65,18 +67,18 @@ contract("DogeFoodPool", function (accounts) {
     // return assert.equal(uri0, uri0_1); //assert.equal(owner0, to) && 
   });
 
-  it("BlindBox: check Pool deployed", async function () {
-    const enabled = await pool.isBBoxEnable.call(0);
-    assert.equal(enabled, true);
+  it("SoloPool: check Pool deployed", async function () {
+    const nftTokenAddress = await pool.nftToken.call();
+    assert.equal(nftTokenAddress, nft.address);
   });
 
-  it("Approve a NFT token to BlindBox contract", async function () {
-    let nftId = 0;
+  it("Approve a NFT token to SoloPool contract", async function () {
+    let nftId = 1;
     // console.log(c2c.address);
-    const tx = await nft.approve(blindBox.address, nftId);
+    const tx = await nft.approve(pool.address, nftId);
     const approver = await nft.getApproved(nftId);
     // console.log(approver);
-    assert.equal(approver, blindBox.address);
+    assert.equal(approver, pool.address);
 
     // inspect the transaction & perform assertions on the logs
     const { logs } = tx;
@@ -85,145 +87,74 @@ contract("DogeFoodPool", function (accounts) {
 
     const log = logs[0];
     assert.equal(log.event, 'Approval');
-    assert.equal(log.args.approved.toString(), blindBox.address.toString());
+    assert.equal(log.args.approved.toString(), pool.address.toString());
     // assert.equal(log.args.atCar.toString(), '1');
   });
 
-  // it("Approve 3 NFT tokens to BlindBox contract", async function () {
-  //   let nftId = 1;
-  //   // console.log(c2c.address);
-  //   let tx = await nft.approve(blindBox.address, nftId);
-  //   let approver = await nft.getApproved(nftId);
-  //   // console.log(approver);
-  //   assert.equal(approver, blindBox.address);
+  it("Approve 2 NFT tokens to SoloPool", async function () {
+    let nftId = 2;
+    // console.log(c2c.address);
+    let tx = await nft.approve(pool.address, nftId);
+    let approver = await nft.getApproved(nftId);
+    // console.log(approver);
+    assert.equal(approver, pool.address);
 
-  //   nftId = 2;
-  //   tx = await nft.approve(blindBox.address, nftId);
-  //   approver = await nft.getApproved(nftId);
-  //   // console.log(approver);
-  //   assert.equal(approver, blindBox.address);
+    nftId = 3;
+    tx = await nft.approve(pool.address, nftId);
+    approver = await nft.getApproved(nftId);
+    // console.log(approver);
+    assert.equal(approver, pool.address);
 
-  // });
+  });
 
-  it("Open a blind box from blind box 1", async function () {
-    let bid = 0;
+  it("Depsit 3 NFT token to SoloPool", async function () {
+    let nftId1 = 1;
+    let nftId2 = 2;
+    let nftId3 = 3;
     // nft.approved(nft.address, nftId);
-    const {
-      category,
-      current,
-      total,
-      tokenAddr,
-      tokenValue,
-      startTimestamp,
-      endTimestamp
-    } = await blindBox.getBBox(bid);
-
-    await dogeToken.approve(blindBox.address, tokenValue, { from: accounts[0] });
-    const tx = await blindBox.openBBox(bid);
+    const tx = await pool.depositWithNFT(0, 7, nftId1, nftId2, nftId3);
     const { logs } = tx;
     console.log(logs);
     assert.ok(Array.isArray(logs));
     assert.equal(logs.length, 1);
     const log = logs[0];
-    console.log(log.args.serialNo.toNumber());
-    assert.equal(log.event, 'BBoxOpenEvent');
-    assert.equal(log.args.category.toNumber(), "1");
+    assert.equal(log.event, 'DepositWithNFT');
+    assert.equal(log.args.nft1.toNumber(), nftId1);
+    // assert.equal(c2c.totalItem.call(), totalItem+1, "C2C total item should should increase one.");
   });
 
-  it("Open a blind box from blind box 2", async function () {
-    let boxId = 1;
+  it("Wait for 10 seconds and update", async function () {
     // nft.approved(nft.address, nftId);
-    const {
-      category,
-      current,
-      total,
-      tokenAddr,
-      tokenValue,
-      startTimestamp,
-      endTimestamp
-    } = await blindBox.getBBox(boxId);
+    await wait(10);
 
-    await dogeToken.approve(blindBox.address, tokenValue, { from: accounts[0] });
-    const tx = await blindBox.openBBox(boxId);
+    const tx = await pool.updateReward(0);
+    const { logs } = tx;
+    console.log(logs);
+    assert.ok(Array.isArray(logs));
+    assert.equal(logs.length, 0);
+    // const log = logs[0];
+    // assert.equal(log.event, 'DepositWithNFT');
+    // assert.equal(log.args.nft1.toNumber(), nftId1);
+    // assert.equal(c2c.totalItem.call(), totalItem+1, "C2C total item should should increase one.");
+  });
+
+
+  it("Withdraw 3 NFT token from SoloPool", async function () {
+    let nftId1 = 1;
+    let nftId2 = 2;
+    let nftId3 = 3;
+    let poolId = 0;
+    // nft.approved(nft.address, nftId);
+    const tx = await pool.withdraw(poolId, 0);
     const { logs } = tx;
     console.log(logs);
     assert.ok(Array.isArray(logs));
     assert.equal(logs.length, 1);
     const log = logs[0];
-    console.log(log.args.serialNo.toNumber());
-    assert.equal(log.event, 'BBoxOpenEvent');
-    assert.equal(log.args.category.toNumber(), "2");
+    assert.equal(log.event, 'Withdraw');
+    assert.equal(log.args.nft1.toNumber(), nftId1);
+    // assert.equal(c2c.totalItem.call(), totalItem+1, "C2C total item should should increase one.");
   });
-
-  it("Open a blind box from blind box 3", async function () {
-
-    let boxId = 2;
-    // nft.approved(nft.address, nftId);
-    const {
-      category,
-      current,
-      total,
-      tokenAddr,
-      tokenValue,
-      startTimestamp,
-      endTimestamp
-    } = await blindBox.getBBox(boxId);
-    const balance1 = web3.utils.toBN(await web3.eth.getBalance(accounts[0]));
-    console.log(typeof (balance1));
-    console.log("balance1 ", balance1.toString());
-    // await dogeToken.approve(blindBox.address, web3.utils.toWei(tokenValue), { from: accounts[0] });
-    const tx = await blindBox.openBBox(boxId, { value: tokenValue });
-    const { logs } = tx;
-    console.log(logs);
-    assert.ok(Array.isArray(logs));
-    assert.equal(logs.length, 1);
-    const log = logs[0];
-    console.log(log.args.serialNo.toNumber());
-    assert.equal(log.event, 'BBoxOpenEvent');
-    assert.equal(log.args.category.toNumber(), "3");
-    const balance2 = web3.utils.toBN(await web3.eth.getBalance(accounts[0]));
-    console.log("balance2 ", balance2.toString());
-    console.log("tokenValue ", tokenValue.toString());
-    assert(balance1.toString(), balance2.add(tokenValue).toString());
-  });
-
-  // it("Approve a NFT token to C2C contract", async function () {
-  //   const nft = await ERC721PresetMinterPauserAutoId.deployed()
-  //   const c2c = await PantheonC2C.deployed()
-  //   let nftId = 1;
-  //   // console.log(c2c.address);
-  //   let totalItem = c2c.totalItem.call();
-  //   const tx = await nft.approve(c2c.address, nftId);
-  //   // const approver = nft.getApproved(nftId);
-  //   // console.log(approver);
-  //   // return assert.equal(approver,c2c.address);
-
-  //   // inspect the transaction & perform assertions on the logs
-  //   const { logs } = tx;
-  //   assert.ok(Array.isArray(logs));
-  //   assert.equal(logs.length, 1);
-
-  //   const log = logs[0];
-  //   assert.equal(log.event, 'Approval');
-  //   assert.equal(log.args.approved.toString(), c2c.address.toString());
-  //   // assert.equal(log.args.atCar.toString(), '1');
-  // });
-
-  // it("Depsit another NFT token", async function () {
-  //   const c2c = await PantheonC2C.deployed()
-  //   let totalItem = c2c.totalItem.call();
-  //   let nftId = 1;
-  //   // nft.approved(nft.address, nftId);
-  //   const tx = await c2c.depositC2CItem(nftId, 1e+6);
-  //   const { logs } = tx;
-  //   // console.log(logs);
-  //   assert.ok(Array.isArray(logs));
-  //   assert.equal(logs.length, 1);
-  //   const log = logs[0];
-  //   assert.equal(log.event, 'C2CDepositItemEvent');
-  //   assert.equal(log.args.nftId.toNumber(), nftId);
-  //   // assert.equal(c2c.totalItem.call(), totalItem+1, "C2C total item should should increase one.");
-  // });
 
   // it("Approve a pan token to C2C contract", async function () {
   //   const nft = await ERC721PresetMinterPauserAutoId.deployed();

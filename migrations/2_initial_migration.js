@@ -39,8 +39,7 @@ module.exports = async function (deployer, network, accounts) {
     await deployer.deploy(DogeFoodBlindBox, accounts[0]);
 
     // Deploy Pool
-    chaPerBlock = web3.utils.toWei("50000") / 24 / 1200;
-    await deployer.deploy(DogeFoodSoloPool, panToken.address, ERC20PresetFixedSupply.address, ERC721Card.address, beneficancy, web3.utils.toWei("1.736111"), 0, web3.utils.toWei("10000000"));
+    await deployer.deploy(DogeFoodSoloPool, ERC20PresetFixedSupply.address, ERC721Card.address);
 
     // pancakeRouter = "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3";
     // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
@@ -81,6 +80,7 @@ module.exports = async function (deployer, network, accounts) {
     await deployer.deploy(DogeFoodBlindBox, accounts[0]);
     // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
     // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, liquidAddress, 200000000, accounts[0]);
+    await deployer.deploy(DogeFoodSoloPool, ERC20PresetFixedSupply.address, ERC721Card.address);
 
 
   } else if (network == "bsc") {

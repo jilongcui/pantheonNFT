@@ -61,7 +61,7 @@ contract DogeFoodBlindBox is Ownable {
 
     // 代币的地址
     address payable public nftAddress;
-
+    address public blackholeAddr;
     // 新的盲盒的状态
     BBox[] public bboxes;
 
@@ -70,6 +70,7 @@ contract DogeFoodBlindBox is Ownable {
     constructor(address beneficiary_) payable {
         chairperson = msg.sender;
         beneficiary = beneficiary_;
+        blackholeAddr = address(0x000000000000000000000000000000000000dEaD);
     }
 
     function setBBoxToken(
@@ -116,6 +117,11 @@ contract DogeFoodBlindBox is Ownable {
         box.status = status;
     }
 
+    function setBeneficiary(address _beneficiary) public onlyOwner {
+        require(_beneficiary != address(0));
+        beneficiary = _beneficiary;
+    }
+
     function setBBoxInfo(
         uint8 category,
         address _nftAddress,
@@ -144,7 +150,7 @@ contract DogeFoodBlindBox is Ownable {
     // Get a SerialNo
     function getSerialNo(uint8 category, uint16 current)
         private
-        view
+        pure
         returns (uint32)
     {
         return
@@ -152,6 +158,16 @@ contract DogeFoodBlindBox is Ownable {
                 uint256(keccak256(abi.encodePacked(category, current))) %
                     1000000000
             );
+    }
+
+    function safeTransferToThis(IERC20 token, uint256 _amount) internal {
+        uint256 chaBal = token.balanceOf(address(this));
+        if (_amount > chaBal) {
+            _amount = chaBal;
+        }
+        token.transferFrom(msg.sender, blackholeAddr, _amount.mul(10).div(100));
+        token.transferFrom(msg.sender, beneficiary, _amount.mul(10).div(100));
+        token.transferFrom(msg.sender, address(this), _amount.mul(80).div(100));
     }
 
     // 购买BBox
@@ -177,7 +193,7 @@ contract DogeFoodBlindBox is Ownable {
             payable(beneficiary).transfer(box.tokenValue);
         } else {
             IERC20 token = IERC20(box.tokenAddr);
-            token.transferFrom(msg.sender, beneficiary, box.tokenValue);
+            safeTransferToThis(token, box.tokenValue);
         }
 
         box.current = box.current + 1;
