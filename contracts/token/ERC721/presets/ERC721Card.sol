@@ -49,6 +49,7 @@ contract ERC721Card is
     mapping(uint256 => uint8) nftCategory;
     mapping(uint256 => uint8) nftLevel;
     mapping(uint256 => uint16) nftPower;
+    mapping(uint256 => uint256) nftIndex;
     // CardInfo struct as [category][level][cardInfo]
     mapping(uint8 => mapping(uint8 => CardInfo)) cardInfo;
 
@@ -56,8 +57,8 @@ contract ERC721Card is
         address indexed from,
         address indexed to,
         uint16 category,
+        uint32 serialNo,
         uint16 level,
-        uint256 id,
         uint256 timestamp
     );
 
@@ -137,6 +138,10 @@ contract ERC721Card is
 
     function categoryOf(uint256 id) external view returns (uint8 category) {
         return nftCategory[id];
+    }
+
+    function nftIndexOf(uint256 id) external view returns (uint256 index) {
+        return nftIndex[id];
     }
 
     function cardCategory(uint8 _category, uint8 _level)
@@ -228,30 +233,36 @@ contract ERC721Card is
         revert("No available card");
     }
 
-    function mintCard(uint8 category, address to) public returns (uint256) {
+    function mintCard(
+        uint8 category,
+        uint32 serialNo,
+        address to
+    ) public returns (uint8, uint256) {
         (uint8 level, uint16 current) = getAvailableCard(category);
         CardInfo storage card = cardInfo[category][level];
-        uint256 id = 0;
         require(card.current + 1 < card.total, "This level card is mint out");
+        require(nftIndex[serialNo] == 0, "This serialNo is used.");
         card.current += 1;
-        id = mint(to);
-        nftLevel[id] = level;
-        nftPower[id] = card.power;
-        nftCategory[id] = category;
+        uint256 idx = mint(to, serialNo);
+        nftLevel[serialNo] = level;
+        nftPower[serialNo] = card.power;
+        nftCategory[serialNo] = category;
+        nftIndex[serialNo] = idx;
         emit MintWithLevel(
             msg.sender,
             to,
             category,
+            serialNo,
             level,
-            id,
             block.timestamp
         );
 
-        return id;
+        return (level, card.power);
     }
 
     function mintWithLevel(
         uint8 _category,
+        uint32 _serialNo,
         uint8 _level,
         address to
     ) public returns (bool) {
@@ -259,16 +270,17 @@ contract ERC721Card is
         CardInfo storage level = cardInfo[_category][_level];
         if (level.current + 1 < level.total) {
             level.current += 1;
-            uint256 id = mint(to);
-            nftLevel[id] = _level;
-            nftPower[id] = level.power;
-            nftCategory[id] = _category;
+            uint256 idx = mint(to, _serialNo);
+            nftLevel[_serialNo] = _level;
+            nftPower[_serialNo] = level.power;
+            nftCategory[_serialNo] = _category;
+            nftIndex[_serialNo] = idx;
             emit MintWithLevel(
                 msg.sender,
                 to,
                 _category,
+                _serialNo,
                 _level,
-                id,
                 block.timestamp
             );
         }
@@ -287,7 +299,7 @@ contract ERC721Card is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(address to) private returns (uint256) {
+    function mint(address to, uint32 serialNo) private returns (uint256) {
         require(
             hasRole(MINTER_ROLE, _msgSender()),
             "ERC721PresetMinterPauserAutoId: must have minter role to mint"
@@ -296,7 +308,7 @@ contract ERC721Card is
         // We cannot just use balanceOf to create the new tokenId because tokens
         // can be burned (destroyed), so we need a separate counter.
         uint256 current = _tokenIdTracker.current();
-        _mint(to, current);
+        _mint(to, uint256(serialNo));
         _tokenIdTracker.increment();
         return current;
     }

@@ -43,18 +43,18 @@ contract("DogeFoodBlindBox", function (accounts) {
     console.log("afterEach");
   });
 
-  it("Check deploy two NFT deployed", async function () {
+  it("Check deploy 3 NFT deployed", async function () {
     const to = accounts[0];
-    await nft.mintCard(1, to);
-    const owner0 = await nft.ownerOf.call(0);
+    await nft.mintCard(1, "123", to);
+    const owner0 = await nft.ownerOf.call("123");
     assert.equal(owner0, to);
 
-    await nft.mintCard(2, to);
-    const owner1 = await nft.ownerOf.call(1);
+    await nft.mintCard(2, "124", to);
+    const owner1 = await nft.ownerOf.call("124");
     assert.equal(owner1, to);
 
-    await nft.mintCard(3, to);
-    const owner2 = await nft.ownerOf.call(1);
+    await nft.mintCard(3, "125", to);
+    const owner2 = await nft.ownerOf.call("125");
     assert.equal(owner2, to);
     // return assert.equal(nft.balanceOf(to), 1);
     // const owner0 = await nft.ownerOf.call(0);
@@ -71,7 +71,7 @@ contract("DogeFoodBlindBox", function (accounts) {
   });
 
   it("Approve a NFT token to BlindBox contract", async function () {
-    let nftId = 0;
+    let nftId = "123";
     // console.log(c2c.address);
     const tx = await nft.approve(blindBox.address, nftId);
     const approver = await nft.getApproved(nftId);
@@ -84,26 +84,11 @@ contract("DogeFoodBlindBox", function (accounts) {
     assert.equal(logs.length, 1);
 
     const log = logs[0];
+    console.log(log.args);
     assert.equal(log.event, 'Approval');
     assert.equal(log.args.approved.toString(), blindBox.address.toString());
     // assert.equal(log.args.atCar.toString(), '1');
   });
-
-  // it("Approve 3 NFT tokens to BlindBox contract", async function () {
-  //   let nftId = 1;
-  //   // console.log(c2c.address);
-  //   let tx = await nft.approve(blindBox.address, nftId);
-  //   let approver = await nft.getApproved(nftId);
-  //   // console.log(approver);
-  //   assert.equal(approver, blindBox.address);
-
-  //   nftId = 2;
-  //   tx = await nft.approve(blindBox.address, nftId);
-  //   approver = await nft.getApproved(nftId);
-  //   // console.log(approver);
-  //   assert.equal(approver, blindBox.address);
-
-  // });
 
   it("Open a blind box from blind box 1", async function () {
     let bid = 0;
@@ -116,18 +101,19 @@ contract("DogeFoodBlindBox", function (accounts) {
       tokenValue,
       startTimestamp,
       endTimestamp
-    } = await blindBox.getBBox(bid);
+    } = await blindBox.getBBoxInfo(bid);
 
     await dogeToken.approve(blindBox.address, tokenValue, { from: accounts[0] });
-    const tx = await blindBox.openBBox(bid);
+    const tx = await blindBox.openBBox(bid, "123400");
     const { logs } = tx;
-    console.log(logs);
     assert.ok(Array.isArray(logs));
     assert.equal(logs.length, 1);
     const log = logs[0];
-    console.log(log.args.serialNo.toNumber());
+    console.log("level ", log.args.level.toNumber());
+    console.log("url ", log.args.url.toString());
     assert.equal(log.event, 'BBoxOpenEvent');
     assert.equal(log.args.category.toNumber(), "1");
+    assert.equal(log.args.serialNo.toNumber(), "123400");
   });
 
   it("Open a blind box from blind box 2", async function () {
@@ -141,18 +127,21 @@ contract("DogeFoodBlindBox", function (accounts) {
       tokenValue,
       startTimestamp,
       endTimestamp
-    } = await blindBox.getBBox(boxId);
+    } = await blindBox.getBBoxInfo(boxId);
 
     await dogeToken.approve(blindBox.address, tokenValue, { from: accounts[0] });
-    const tx = await blindBox.openBBox(boxId);
+    const tx = await blindBox.openBBox(boxId, "123451");
     const { logs } = tx;
-    console.log(logs);
+    console.log(logs.args);
     assert.ok(Array.isArray(logs));
     assert.equal(logs.length, 1);
     const log = logs[0];
-    console.log(log.args.serialNo.toNumber());
+    console.log("level ", log.args.level.toNumber());
+    console.log("url ", log.args.url.toString());
     assert.equal(log.event, 'BBoxOpenEvent');
     assert.equal(log.args.category.toNumber(), "2");
+    assert.equal(log.args.serialNo.toNumber(), "123451");
+
   });
 
   it("Open a blind box from blind box 3", async function () {
@@ -167,20 +156,57 @@ contract("DogeFoodBlindBox", function (accounts) {
       tokenValue,
       startTimestamp,
       endTimestamp
-    } = await blindBox.getBBox(boxId);
+    } = await blindBox.getBBoxInfo(boxId);
     const balance1 = web3.utils.toBN(await web3.eth.getBalance(accounts[0]));
     console.log(typeof (balance1));
     console.log("balance1 ", balance1.toString());
     // await dogeToken.approve(blindBox.address, web3.utils.toWei(tokenValue), { from: accounts[0] });
-    const tx = await blindBox.openBBox(boxId, { value: tokenValue });
+    const tx = await blindBox.openBBox(boxId, "0", { value: tokenValue });
     const { logs } = tx;
     console.log(logs);
     assert.ok(Array.isArray(logs));
     assert.equal(logs.length, 1);
     const log = logs[0];
-    console.log(log.args.serialNo.toNumber());
+    console.log("level ", log.args.level.toNumber());
+    console.log("url ", log.args.url.toString());
+    console.log("serialNo ", log.args.serialNo.toNumber());
     assert.equal(log.event, 'BBoxOpenEvent');
     assert.equal(log.args.category.toNumber(), "3");
+    const balance2 = web3.utils.toBN(await web3.eth.getBalance(accounts[0]));
+    console.log("balance2 ", balance2.toString());
+    console.log("tokenValue ", tokenValue.toString());
+    assert(balance1.toString(), balance2.add(tokenValue).toString());
+  });
+
+  it("Open a blind box from blind box 3 with serialNo", async function () {
+
+    let boxId = 2;
+    // nft.approved(nft.address, nftId);
+    const {
+      category,
+      current,
+      total,
+      tokenAddr,
+      tokenValue,
+      startTimestamp,
+      endTimestamp
+    } = await blindBox.getBBoxInfo(boxId);
+    const balance1 = web3.utils.toBN(await web3.eth.getBalance(accounts[0]));
+    console.log(typeof (balance1));
+    console.log("balance1 ", balance1.toString());
+    // await dogeToken.approve(blindBox.address, web3.utils.toWei(tokenValue), { from: accounts[0] });
+    const tx = await blindBox.openBBox(boxId, "123567", { value: tokenValue });
+    const { logs } = tx;
+    console.log(logs);
+    assert.ok(Array.isArray(logs));
+    assert.equal(logs.length, 1);
+    const log = logs[0];
+    console.log("level ", log.args.level.toNumber());
+    console.log("url ", log.args.url.toString());
+    console.log("serialNo ", log.args.serialNo.toNumber());
+    assert.equal(log.event, 'BBoxOpenEvent');
+    assert.equal(log.args.category.toNumber(), "3");
+    assert.equal(log.args.serialNo.toNumber(), "123567");
     const balance2 = web3.utils.toBN(await web3.eth.getBalance(accounts[0]));
     console.log("balance2 ", balance2.toString());
     console.log("tokenValue ", tokenValue.toString());

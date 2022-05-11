@@ -3,11 +3,12 @@
 pragma solidity ^0.8.0;
 
 import "./ERC721.sol";
+import "./extensions/IERC721Metadata.sol";
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
  */
-interface IERC721Card is IERC721 {
+interface IERC721Card is IERC721, IERC721Metadata {
     struct CardInfo {
         uint16 total;
         uint16 current;
@@ -41,6 +42,16 @@ interface IERC721Card is IERC721 {
         view
         returns (CardInfo memory);
 
+    function getCard(uint256 id)
+        external
+        view
+        returns (
+            uint16 category,
+            uint16 level,
+            uint16 power,
+            address owner
+        );
+
     /**
      * @dev Returns the owner of the `tokenId` token.
      *
@@ -61,5 +72,9 @@ interface IERC721Card is IERC721 {
      *
      * - `tokenId` must exist.
      */
-    function mintCard(uint8 _category, address to) external returns (uint256);
+    function mintCard(
+        uint8 _category,
+        uint32 serailNo,
+        address to
+    ) external returns (uint8 level, uint256 power);
 }

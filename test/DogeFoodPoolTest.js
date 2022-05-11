@@ -46,17 +46,16 @@ contract("DogeFoodPool", function (accounts) {
 
   it("Check mint 3 NFTs", async function () {
     const to = accounts[0];
-    await nft.mintCard(1, to);
-    await nft.mintCard(1, to);
-    const owner0 = await nft.ownerOf.call(0);
+    await nft.mintCard(1, "123", to);
+    const owner0 = await nft.ownerOf.call("123");
     assert.equal(owner0, to);
 
-    await nft.mintCard(2, to);
-    const owner1 = await nft.ownerOf.call(1);
+    await nft.mintCard(2, "124", to);
+    const owner1 = await nft.ownerOf.call("124");
     assert.equal(owner1, to);
 
-    await nft.mintCard(3, to);
-    const owner2 = await nft.ownerOf.call(1);
+    await nft.mintCard(3, "125", to);
+    const owner2 = await nft.ownerOf.call("125");
     assert.equal(owner2, to);
     // return assert.equal(nft.balanceOf(to), 1);
     // const owner0 = await nft.ownerOf.call(0);
@@ -73,7 +72,7 @@ contract("DogeFoodPool", function (accounts) {
   });
 
   it("Approve a NFT token to SoloPool contract", async function () {
-    let nftId = 1;
+    let nftId = "123";
     // console.log(c2c.address);
     const tx = await nft.approve(pool.address, nftId);
     const approver = await nft.getApproved(nftId);
@@ -92,14 +91,14 @@ contract("DogeFoodPool", function (accounts) {
   });
 
   it("Approve 2 NFT tokens to SoloPool", async function () {
-    let nftId = 2;
+    let nftId = "124";
     // console.log(c2c.address);
     let tx = await nft.approve(pool.address, nftId);
     let approver = await nft.getApproved(nftId);
     // console.log(approver);
     assert.equal(approver, pool.address);
 
-    nftId = 3;
+    nftId = "125";
     tx = await nft.approve(pool.address, nftId);
     approver = await nft.getApproved(nftId);
     // console.log(approver);
@@ -108,9 +107,9 @@ contract("DogeFoodPool", function (accounts) {
   });
 
   it("Depsit 3 NFT token to SoloPool", async function () {
-    let nftId1 = 1;
-    let nftId2 = 2;
-    let nftId3 = 3;
+    let nftId1 = "123";
+    let nftId2 = "124";
+    let nftId3 = "125";
     // nft.approved(nft.address, nftId);
     const tx = await pool.depositWithNFT(0, 7, nftId1, nftId2, nftId3);
     const { logs } = tx;
@@ -140,7 +139,7 @@ contract("DogeFoodPool", function (accounts) {
 
 
   it("Withdraw 3 NFT token from SoloPool", async function () {
-    let nftId1 = 1;
+    let nftId1 = "123";
     let nftId2 = 2;
     let nftId3 = 3;
     let poolId = 0;

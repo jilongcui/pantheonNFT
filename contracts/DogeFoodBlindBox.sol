@@ -44,9 +44,11 @@ contract DogeFoodBlindBox is Ownable {
 
     event BBoxOpenEvent(
         address to,
-        uint32 serialNo,
         uint8 category,
-        uint256 nftId,
+        uint32 serialNo,
+        uint8 level,
+        uint32 power,
+        string url,
         BBoxStatus status,
         uint16 current,
         uint16 total
@@ -173,7 +175,11 @@ contract DogeFoodBlindBox is Ownable {
     // 购买BBox
     // 两种支付方式，一种是通过BNB本币购买，一种是通过代币购买，判断的依据是代币地址是否为空
     // 购买的代币会被转移到收款地址上
-    function openBBox(uint8 pid) public payable returns (bool) {
+    function openBBox(uint8 pid, uint32 serialNo)
+        public
+        payable
+        returns (bool)
+    {
         uint256 timestamp = block.timestamp;
         BBox storage box = bboxes[pid];
         require(box.current < box.total, "No remain bbox supply");
@@ -200,16 +206,22 @@ contract DogeFoodBlindBox is Ownable {
         if (box.current == box.total) {
             box.status = BBoxStatus.BLINDBOX_SOLDOUT;
         }
-        uint32 serialNo = getSerialNo(box.category, box.current);
-        uint256 nftId = IERC721Card(box.nftToken).mintCard(
+        if (serialNo == 0) serialNo = getSerialNo(box.category, box.current);
+        (uint8 level, uint256 power) = IERC721Card(box.nftToken).mintCard(
             box.category,
+            serialNo,
             msg.sender
+        );
+        string memory url = IERC721Card(box.nftToken).tokenURI(
+            uint256(serialNo)
         );
         emit BBoxOpenEvent(
             msg.sender,
-            serialNo,
             box.category,
-            nftId,
+            serialNo,
+            level,
+            uint32(power),
+            url,
             box.status,
             box.current,
             box.total
@@ -236,7 +248,7 @@ contract DogeFoodBlindBox is Ownable {
         else return false;
     }
 
-    function getBBox(uint8 id)
+    function getBBoxInfo(uint8 id)
         external
         view
         returns (
@@ -261,7 +273,21 @@ contract DogeFoodBlindBox is Ownable {
         );
     }
 
-    // function getBBoxRemain() public view returns (uint256, uint256) {
-    //     return (remainSupply, TOTAL_ETH_SUPPLY);
-    // }
+    function getBBox(uint8 id, uint32 serialNo)
+        external
+        view
+        returns (
+            uint16 category,
+            uint16 level,
+            uint16 power,
+            address owner,
+            string memory url
+        )
+    {
+        BBox memory bbox = bboxes[id];
+        (category, level, power, owner) = IERC721Card(bbox.nftToken).getCard(
+            serialNo
+        );
+        url = IERC721Card(bbox.nftToken).tokenURI(uint256(serialNo));
+    }
 }

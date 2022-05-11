@@ -544,7 +544,7 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
                 else isLucky = false;
             }
             if (isLucky) {
-                nftToken.mintWithLevel(0, level, to);
+                nftToken.mintWithLevel(0, 0, level, to);
             }
         }
         //if any account belongs to _isExcludedFromFee account then remove the fee
