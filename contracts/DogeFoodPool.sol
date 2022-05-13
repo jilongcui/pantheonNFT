@@ -31,13 +31,14 @@ interface IMigratorChef {
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
-contract DogeFoodSoloPool is Ownable, ERC721Holder {
+contract DogeFoodPool is Ownable, ERC721Holder {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     // Miner information describe miner. One should has many Miners;
     struct MinerInfo {
         uint256 power; // 算力 rati = power / 1000
+        uint256 startBlock; // 开始block
         uint256 endBlock; // 结束block
         uint256 rewardDebt; // Reward debt. See explanation below.
         uint32 nft1;
@@ -56,6 +57,8 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         address indexed user,
         uint256 indexed pid,
         uint256 idx,
+        uint256 startBlock,
+        uint256 endBlock,
         uint256 power,
         uint32 nft1,
         uint32 nft2,
@@ -102,6 +105,7 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
     uint256 public totalAllocPoint = 0;
     // The block number when CHA mining starts.
     uint256 public startBlock;
+    uint32 public oneDayHour = 1;
 
     constructor(IERC20 _chaAddress, IERC721Card _nftAddress) {
         chaToken = _chaAddress;
@@ -153,6 +157,10 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         pool.chaPerBlock = _chaPerBlock;
         pool.startBlock = _startBlock;
         pool.totalReward = _totalReward;
+    }
+
+    function setOneDayHour(uint32 _oneDayHour) public onlyOwner {
+        oneDayHour = _oneDayHour;
     }
 
     function setPanToken(address _chaAddress) public onlyOwner {
@@ -277,8 +285,9 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         // uint256 amount = 1000; // 1USDT = 1000 DOGEFOOD
         pool.totalPower = pool.totalPower.add(power);
         uint256 blockNumber = block.number;
+        miner.startBlock = blockNumber;
         miner.power = power;
-        miner.endBlock = blockNumber.add(1);
+        miner.endBlock = blockNumber.add(countday * oneDayHour * 1200); // toFixed
         // miner.endBlock = blockNumber.add(countday * 24 * 1200);
 
         miner.nft1 = uint32(nft1);
@@ -286,10 +295,20 @@ contract DogeFoodSoloPool is Ownable, ERC721Holder {
         miner.nft3 = uint32(nft3);
         // uint256 accPerShare = getAccPerShare(block.number);
         // miner.rewardDebt = miner.power.mul(accPerShare).div(1e12);
-
+        minerCount[msg.sender] = count + 1;
         minerInfo[msg.sender][count] = miner;
         userPower[msg.sender] = userPower[msg.sender].add(power);
-        emit DepositWithNFT(msg.sender, _pid, count, power, nft1, nft2, nft3);
+        emit DepositWithNFT(
+            msg.sender,
+            _pid,
+            count,
+            miner.startBlock,
+            miner.endBlock,
+            power,
+            nft1,
+            nft2,
+            nft3
+        );
     }
 
     function getAccPerShare(uint256 blockNumber)

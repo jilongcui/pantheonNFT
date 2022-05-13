@@ -44,6 +44,7 @@ contract DogeFoodBlindBox is Ownable {
 
     event BBoxOpenEvent(
         address to,
+        uint8 boxId,
         uint8 category,
         uint32 serialNo,
         uint8 level,
@@ -163,10 +164,10 @@ contract DogeFoodBlindBox is Ownable {
     }
 
     function safeTransferToThis(IERC20 token, uint256 _amount) internal {
-        uint256 chaBal = token.balanceOf(address(this));
-        if (_amount > chaBal) {
-            _amount = chaBal;
-        }
+        // uint256 chaBal = token.balanceOf(address(this));
+        // if (_amount > chaBal) {
+        //     _amount = chaBal;
+        // }
         token.transferFrom(msg.sender, blackholeAddr, _amount.mul(10).div(100));
         token.transferFrom(msg.sender, beneficiary, _amount.mul(10).div(100));
         token.transferFrom(msg.sender, address(this), _amount.mul(80).div(100));
@@ -217,6 +218,7 @@ contract DogeFoodBlindBox is Ownable {
         );
         emit BBoxOpenEvent(
             msg.sender,
+            pid,
             box.category,
             serialNo,
             level,

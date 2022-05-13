@@ -1,7 +1,7 @@
 // migrations/2_deploy.js
 // SPDX-License-Identifier: MIT
 const ERC20PresetFixedSupply = artifacts.require("ERC20PresetFixedSupply");
-// const ERC20PanToken = artifacts.require("ERC20PanToken");
+const ERC20DogeFoodToken = artifacts.require("ERC20DogeFoodToken");
 const ERC721Card = artifacts.require("ERC721Card");
 const DogeFoodBlindBox = artifacts.require("DogeFoodBlindBox");
 const DogeFoodSoloPool = artifacts.require("DogeFoodSoloPool");
@@ -147,16 +147,16 @@ module.exports = async function (deployer, network, accounts) {
     // await initUSDT(network, accounts);
     await initSoloPool(network, accounts)
     let zeroAddress = "0x0000000000000000000000000000000000000000";
-    let dogeToken = await ERC20PresetFixedSupply.deployed();
+    let dogeToken = await ERC20DogeFoodToken.deployed();
     let startTime = toTimestamp("2021-08-19 15:00:00");
     let endTime = toTimestamp("2022-08-29 23:00:00");
     let totalSupply = 1000;
     // Init token and price
 
     tokenAddress = dogeToken.address; // DogeFood Address
-    tokenValue = web3.utils.toWei("37107"); // $0.00000000000269484
+    tokenValue = web3.utils.toWei("37107", "Gwei"); // $0.00000000000269484
     await initBlindBox(1, tokenAddress, tokenValue, totalSupply, startTime, endTime);
     await initBlindBox(2, tokenAddress, tokenValue, totalSupply, startTime, endTime);
-    tokenValue = web3.utils.toWei("0.35"); // 0.35 BNB
+    tokenValue = web3.utils.toWei("0.0035"); // 0.35 BNB
     await initBlindBox(3, zeroAddress, tokenValue, totalSupply, startTime, endTime);
 }
