@@ -1,8 +1,8 @@
 const fs = require('fs');
 // require("../contract/token/ERC20/IERC20");
 const ERC721Card = artifacts.require("ERC721Card");
-const DogeFoodPool = artifacts.require("DogeFoodSoloPool");
-const ERC20PresetFixedSupply = artifacts.require("ERC20PresetFixedSupply");
+const DogeFoodPool = artifacts.require("DogeFoodPool");
+const ERC20DogeFoodToken = artifacts.require("ERC20DogeFoodToken");
 const ERC721 = artifacts.require("ERC721");
 const ERC20 = artifacts.require("ERC20");
 var wait = require('./wait')
@@ -26,7 +26,7 @@ contract("DogeFoodPool", function (accounts) {
     console.log("before");
     nft = await ERC721Card.deployed();
     pool = await DogeFoodPool.deployed();
-    dogeToken = await ERC20PresetFixedSupply.deployed();
+    dogeToken = await ERC20DogeFoodToken.deployed();
   });
 
   after(function () {
@@ -66,12 +66,12 @@ contract("DogeFoodPool", function (accounts) {
     // return assert.equal(uri0, uri0_1); //assert.equal(owner0, to) && 
   });
 
-  it("SoloPool: check Pool deployed", async function () {
+  it("Pool: check Pool deployed", async function () {
     const nftTokenAddress = await pool.nftToken.call();
     assert.equal(nftTokenAddress, nft.address);
   });
 
-  it("Approve a NFT token to SoloPool contract", async function () {
+  it("Approve a NFT token to Pool contract", async function () {
     let nftId = "123";
     // console.log(c2c.address);
     const tx = await nft.approve(pool.address, nftId);
@@ -90,7 +90,7 @@ contract("DogeFoodPool", function (accounts) {
     // assert.equal(log.args.atCar.toString(), '1');
   });
 
-  it("Approve 2 NFT tokens to SoloPool", async function () {
+  it("Approve 2 NFT tokens to Pool", async function () {
     let nftId = "124";
     // console.log(c2c.address);
     let tx = await nft.approve(pool.address, nftId);
@@ -106,7 +106,7 @@ contract("DogeFoodPool", function (accounts) {
 
   });
 
-  it("Depsit 3 NFT token to SoloPool", async function () {
+  it("Depsit 3 NFT token to Pool", async function () {
     let nftId1 = "123";
     let nftId2 = "124";
     let nftId3 = "125";
@@ -119,7 +119,7 @@ contract("DogeFoodPool", function (accounts) {
     const log = logs[0];
     assert.equal(log.event, 'DepositWithNFT');
     assert.equal(log.args.nft1.toNumber(), nftId1);
-    // assert.equal(c2c.totalItem.call(), totalItem+1, "C2C total item should should increase one.");
+    // assert.equal(c2c.totalItem.call(), totalItem + 1, "C2C total item should should increase one.");
   });
 
   it("Wait for 10 seconds and update", async function () {
@@ -138,7 +138,7 @@ contract("DogeFoodPool", function (accounts) {
   });
 
 
-  it("Withdraw 3 NFT token from SoloPool", async function () {
+  it("Withdraw 3 NFT token from Pool", async function () {
     let nftId1 = "123";
     let nftId2 = 2;
     let nftId3 = 3;

@@ -4,7 +4,7 @@ const ERC20PresetFixedSupply = artifacts.require("ERC20PresetFixedSupply");
 const ERC20DogeFoodToken = artifacts.require("ERC20DogeFoodToken");
 const ERC721Card = artifacts.require("ERC721Card");
 const DogeFoodBlindBox = artifacts.require("DogeFoodBlindBox");
-const DogeFoodSoloPool = artifacts.require("DogeFoodSoloPool");
+const DogeFoodPool = artifacts.require("DogeFoodPool");
 
 async function initNFT(network, accounts) {
     let erc721 = await ERC721Card.deployed();
@@ -45,11 +45,11 @@ async function initUSDT() {
 }
 
 async function initSoloPool() {
-    let pool = await DogeFoodSoloPool.deployed();
+    let pool = await DogeFoodPool.deployed();
     // console.log(token);
     // pool.addPool(rate, token, isLp, dayNum, withUpdate);
     // pool.setInviteEnable(true);
-    let chaPerBlock = 5000 / 24 / 1200;
+    let chaPerBlock = parseInt(web3.utils.toWei("1000", "Gwei") / 24 / 1200);
     let startBlock = await web3.eth.getBlockNumber();
     await pool.addPool(web3.utils.toWei(chaPerBlock.toString()), startBlock.toString(), web3.utils.toWei("1000000"));
 
@@ -154,8 +154,9 @@ module.exports = async function (deployer, network, accounts) {
     // Init token and price
 
     tokenAddress = dogeToken.address; // DogeFood Address
-    tokenValue = web3.utils.toWei("37107", "Gwei"); // $0.00000000000269484
+    tokenValue = web3.utils.toWei("20", "Gwei"); // $0.00000000000269484
     await initBlindBox(1, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    tokenValue = web3.utils.toWei("15", "Gwei"); // $0.00000000000269484
     await initBlindBox(2, tokenAddress, tokenValue, totalSupply, startTime, endTime);
     tokenValue = web3.utils.toWei("0.0035"); // 0.35 BNB
     await initBlindBox(3, zeroAddress, tokenValue, totalSupply, startTime, endTime);

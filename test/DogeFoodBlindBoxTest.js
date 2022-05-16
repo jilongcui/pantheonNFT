@@ -2,7 +2,7 @@ const fs = require('fs');
 // require("../contract/token/ERC20/IERC20");
 const ERC721Card = artifacts.require("ERC721Card");
 const DogeFoodBlindBox = artifacts.require("DogeFoodBlindBox");
-const ERC20PresetFixedSupply = artifacts.require("ERC20PresetFixedSupply");
+const ERC20DogeFoodToken = artifacts.require("ERC20DogeFoodToken");
 const ERC721 = artifacts.require("ERC721");
 const ERC20 = artifacts.require("ERC20");
 
@@ -25,7 +25,7 @@ contract("DogeFoodBlindBox", function (accounts) {
     console.log("before");
     nft = await ERC721Card.deployed();
     blindBox = await DogeFoodBlindBox.deployed();
-    dogeToken = await ERC20PresetFixedSupply.deployed();
+    dogeToken = await ERC20DogeFoodToken.deployed();
   });
 
   after(function () {

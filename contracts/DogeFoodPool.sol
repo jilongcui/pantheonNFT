@@ -105,7 +105,8 @@ contract DogeFoodPool is Ownable, ERC721Holder {
     uint256 public totalAllocPoint = 0;
     // The block number when CHA mining starts.
     uint256 public startBlock;
-    uint32 public oneDayHour = 1;
+    uint32 public oneDayBlock = 1 * 1200; // to Fixed
+    uint32 public updatePerDay = 6; // to Fixed
 
     constructor(IERC20 _chaAddress, IERC721Card _nftAddress) {
         chaToken = _chaAddress;
@@ -159,8 +160,12 @@ contract DogeFoodPool is Ownable, ERC721Holder {
         pool.totalReward = _totalReward;
     }
 
-    function setOneDayHour(uint32 _oneDayHour) public onlyOwner {
-        oneDayHour = _oneDayHour;
+    function setOneDayBlock(uint32 _oneDayBlock) public onlyOwner {
+        oneDayBlock = _oneDayBlock;
+    }
+
+    function setUpdatePerDay(uint32 _updatePerDay) public onlyOwner {
+        updatePerDay = _updatePerDay;
     }
 
     function setPanToken(address _chaAddress) public onlyOwner {
@@ -202,12 +207,14 @@ contract DogeFoodPool is Ownable, ERC721Holder {
         if (block.number > miner.endBlock) {
             endBlock = miner.endBlock;
         }
-        if (endBlock > lastRewardBlock && pool.totalPower != 0) {
+        if (pool.totalPower != 0) {
             // uint256 accCha = accChaPerShare;
             // uint256 multiplier = getMultiplier(lastRewardBlock, endBlock);
             // uint256 chaReward = multiplier.mul(pool.chaPerBlock);
             // accCha = accCha.add(chaReward.mul(1e12).div(pool.totalPower));
-            uint256 accPerShare = accPerShareList[miner.endBlock / 4800];
+            uint256 accPerShare = accPerShareList[
+                miner.endBlock / (oneDayBlock / updatePerDay)
+            ];
             if (accPerShare == 0) accPerShare = accChaPerShare;
             return miner.power.mul(accPerShare).div(1e12).sub(miner.rewardDebt);
         }
@@ -244,8 +251,10 @@ contract DogeFoodPool is Ownable, ERC721Holder {
         accChaPerShare = accChaPerShare.add(
             chaReward.mul(1e12).div(pool.totalPower)
         );
-        if (accPerShareList[block.number / 4800] == 0)
-            accPerShareList[block.number / 4800] = accChaPerShare;
+        if (accPerShareList[block.number / (oneDayBlock / updatePerDay)] == 0)
+            accPerShareList[
+                block.number / (oneDayBlock / updatePerDay)
+            ] = accChaPerShare;
         lastRewardBlock = block.number;
     }
 
@@ -268,7 +277,7 @@ contract DogeFoodPool is Ownable, ERC721Holder {
         //     nft1 > 0 && nft2 > 0 && nft3 > 0,
         //     "Depsite nft 1 2 3 should not be empty."
         // );
-        updateReward(0);
+        // updateReward(0);
         require(
             (nftToken.ownerOf(nft1) == msg.sender) &&
                 (nftToken.ownerOf(nft2) == msg.sender) &&
@@ -282,19 +291,19 @@ contract DogeFoodPool is Ownable, ERC721Holder {
         nftToken.safeTransferFrom(msg.sender, address(this), nft2);
         power += nftToken.powerOf(nft3);
         nftToken.safeTransferFrom(msg.sender, address(this), nft3);
+        power = power.mul((countday + 100) / 100);
         // uint256 amount = 1000; // 1USDT = 1000 DOGEFOOD
         pool.totalPower = pool.totalPower.add(power);
         uint256 blockNumber = block.number;
         miner.startBlock = blockNumber;
         miner.power = power;
-        miner.endBlock = blockNumber.add(countday * oneDayHour * 1200); // toFixed
-        // miner.endBlock = blockNumber.add(countday * 24 * 1200);
+        miner.endBlock = blockNumber.add(countday * oneDayBlock); // toFixed
 
         miner.nft1 = uint32(nft1);
         miner.nft2 = uint32(nft2);
         miner.nft3 = uint32(nft3);
-        // uint256 accPerShare = getAccPerShare(block.number);
-        // miner.rewardDebt = miner.power.mul(accPerShare).div(1e12);
+        uint256 accPerShare = getAccPerShare(block.number);
+        miner.rewardDebt = miner.power.mul(accPerShare).div(1e12);
         minerCount[msg.sender] = count + 1;
         minerInfo[msg.sender][count] = miner;
         userPower[msg.sender] = userPower[msg.sender].add(power);
@@ -316,10 +325,12 @@ contract DogeFoodPool is Ownable, ERC721Holder {
         view
         returns (uint256)
     {
-        uint256 blockBase = blockNumber.div(4800);
+        uint256 blockBase = blockNumber.div(oneDayBlock / updatePerDay);
         uint256 accPerShare = accPerShareList[blockBase];
-        if (accPerShare == 0) accPerShare = accPerShareList[blockBase - 1];
-        if (accPerShare == 0) accPerShare = accPerShareList[blockBase - 2];
+        if (accPerShare == 0 && blockBase > 1)
+            accPerShare = accPerShareList[blockBase - 1];
+        if (accPerShare == 0 && blockBase > 2)
+            accPerShare = accPerShareList[blockBase - 2];
         if (accPerShare == 0) accPerShare = accChaPerShare;
         return accPerShare;
     }
@@ -328,7 +339,7 @@ contract DogeFoodPool is Ownable, ERC721Holder {
     function harvest(uint256 _pid, uint256 _idx) public {
         // PoolInfo storage pool = poolInfo[_pid];
         MinerInfo storage miner = minerInfo[msg.sender][_pid];
-        updateReward(0);
+        // updateReward(0);
         uint256 accPerShare = getAccPerShare(block.number);
         uint256 pending = miner.power.mul(accPerShare).div(1e12).sub(
             miner.rewardDebt
@@ -349,7 +360,7 @@ contract DogeFoodPool is Ownable, ERC721Holder {
             "Cannot withdraw with days limit."
         );
         // require(accChaPerShare > 0, "accChaPerShare should not be zero");
-        updateReward(0);
+        // updateReward(0);
         uint256 accPerShare = getAccPerShare(miner.endBlock);
         if (miner.power.mul(accPerShare).div(1e12) > miner.rewardDebt) {
             pending = miner.power.mul(accPerShare).div(1e12).sub(
