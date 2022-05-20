@@ -10,6 +10,7 @@ import "./token/ERC721/IERC721Card.sol";
 import "./token/ERC20/IERC20.sol";
 import "./token/ERC721/utils/ERC721Holder.sol";
 import "./token/ERC20/utils/SafeERC20.sol";
+import "./DogeFoodInvite.sol";
 
 interface IMigratorChef {
     // Perform LP token migration from legacy UniswapV2 to ChaSwap.
@@ -31,7 +32,12 @@ interface IMigratorChef {
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
-contract DogeFoodPool is Ownable, ERC721Holder, AccessControlEnumerable {
+contract DogeFoodPool is
+    Ownable,
+    ERC721Holder,
+    AccessControlEnumerable,
+    DogeFoodInvite
+{
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -223,7 +229,9 @@ contract DogeFoodPool is Ownable, ERC721Holder, AccessControlEnumerable {
                 miner.endBlock / (oneDayBlock / updatePerDay)
             ];
             if (accPerShare == 0) accPerShare = accChaPerShare;
-            return miner.power.mul(accPerShare).div(1e12).sub(miner.rewardDebt);
+            uint256 power = miner.power.add(getGroupPower(_user));
+
+            return power.mul(accPerShare).div(1e12).sub(miner.rewardDebt);
         }
         return 0;
     }
@@ -248,6 +256,7 @@ contract DogeFoodPool is Ownable, ERC721Holder, AccessControlEnumerable {
             lastRewardBlock = block.number;
             return;
         }
+        uint256 totalPower = pool.totalPower.add(getGroupPower(msg.sender));
         require(lastRewardBlock <= block.number, "lastRewardBlock not valid");
         uint256 multiplier = getMultiplier(lastRewardBlock, block.number);
         uint256 chaReward = multiplier.mul(pool.chaPerBlock);
@@ -256,14 +265,14 @@ contract DogeFoodPool is Ownable, ERC721Holder, AccessControlEnumerable {
         }
         releasedReward = releasedReward.add(chaReward);
         accChaPerShare = accChaPerShare.add(
-            chaReward.mul(1e12).div(pool.totalPower)
+            chaReward.mul(1e12).div(totalPower)
         );
         if (accPerShareList[block.number / (oneDayBlock / updatePerDay)] == 0)
             accPerShareList[
                 block.number / (oneDayBlock / updatePerDay)
             ] = accChaPerShare;
         lastRewardBlock = block.number;
-        emit UpdateReward(msg.sender, _pid, accChaPerShare, pool.totalPower);
+        emit UpdateReward(msg.sender, _pid, accChaPerShare, totalPower);
     }
 
     // Deposit LP tokens to DogeFoodPool for CHA allocation.
@@ -306,7 +315,6 @@ contract DogeFoodPool is Ownable, ERC721Holder, AccessControlEnumerable {
         miner.startBlock = blockNumber;
         miner.power = power;
         miner.endBlock = blockNumber.add(countday * oneDayBlock); // toFixed
-
         miner.nft1 = uint32(nft1);
         miner.nft2 = uint32(nft2);
         miner.nft3 = uint32(nft3);
@@ -315,6 +323,8 @@ contract DogeFoodPool is Ownable, ERC721Holder, AccessControlEnumerable {
         minerCount[msg.sender] = count + 1;
         minerInfo[msg.sender][count] = miner;
         userPower[msg.sender] = userPower[msg.sender].add(power);
+
+        upGroupPower(msg.sender, power);
         emit DepositWithNFT(
             msg.sender,
             _pid,
@@ -392,6 +402,8 @@ contract DogeFoodPool is Ownable, ERC721Holder, AccessControlEnumerable {
         pool.totalPower = pool.totalPower.sub(miner.power);
 
         userPower[msg.sender] = userPower[msg.sender].sub(miner.power);
+
+        downGroupPower(msg.sender, miner.power);
         emit Withdraw(
             msg.sender,
             _pid,

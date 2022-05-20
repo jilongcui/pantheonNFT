@@ -127,7 +127,7 @@ async function initC2C() {
     await c2c.downC2CItem('4');
 }
 
-async function initDogeFoodToken() {
+async function initDogeFoodToken(network, accounts) {
     let dogeToken = await ERC20DogeFoodToken.deployed();
     console.log(dogeToken.address);
     await dogeToken.transfer(accounts[1], web3.utils.toWei("20000000000000"));
@@ -153,7 +153,7 @@ module.exports = async function (deployer, network, accounts) {
     let totalSupply = 1000;
 
     // Init dogefood token
-    await initDogeFoodToken();
+    await initDogeFoodToken(network, accounts);
 
     // Init token and price
 
@@ -162,6 +162,6 @@ module.exports = async function (deployer, network, accounts) {
     await initBlindBox(1, tokenAddress, tokenValue, totalSupply, startTime, endTime);
     tokenValue = web3.utils.toWei("15", "Gwei"); // $0.00000000000269484
     await initBlindBox(2, tokenAddress, tokenValue, totalSupply, startTime, endTime);
-    tokenValue = web3.utils.toWei("0.0035"); // 0.35 BNB
+    tokenValue = web3.utils.toWei("0.035"); // 0.35 BNB
     await initBlindBox(3, zeroAddress, tokenValue, totalSupply, startTime, endTime);
 }
