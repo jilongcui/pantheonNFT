@@ -61,6 +61,8 @@ contract DogeFoodBlindBox is Ownable {
     address public chairperson;
     // 受益者
     address public beneficiary;
+    // 矿池地址
+    address public poolAddress;
     // BBoxerLog[] public idoerLogs;
 
     // 代币的地址
@@ -126,6 +128,11 @@ contract DogeFoodBlindBox is Ownable {
         beneficiary = _beneficiary;
     }
 
+    function setPoolAddress(address _address) public onlyOwner {
+        require(_address != address(0));
+        poolAddress = _address;
+    }
+
     function setBBoxInfo(
         uint8 category,
         address _nftAddress,
@@ -171,7 +178,7 @@ contract DogeFoodBlindBox is Ownable {
         // }
         token.transferFrom(msg.sender, blackholeAddr, _amount.mul(10).div(100));
         token.transferFrom(msg.sender, beneficiary, _amount.mul(10).div(100));
-        token.transferFrom(msg.sender, address(this), _amount.mul(80).div(100));
+        token.transferFrom(msg.sender, poolAddress, _amount.mul(80).div(100));
     }
 
     // 购买BBox

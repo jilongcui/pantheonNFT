@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./utils/math/SafeMath.sol";
 import "./utils/Address.sol";
 import "./access/Ownable.sol";
-
+import "./access/AccessControlEnumerable.sol";
 import "./token/ERC721/IERC721.sol";
 import "./token/ERC721/IERC721Card.sol";
 import "./token/ERC20/IERC20.sol";
@@ -31,7 +31,7 @@ interface IMigratorChef {
 // distributed and the community can show to govern itself.
 //
 // Have fun reading it. Hopefully it's bug-free. God bless.
-contract DogeFoodPool is Ownable, ERC721Holder {
+contract DogeFoodPool is Ownable, ERC721Holder, AccessControlEnumerable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -79,6 +79,12 @@ contract DogeFoodPool is Ownable, ERC721Holder {
         uint256 idx,
         uint256 amount
     );
+    event UpdateReward(
+        address from,
+        uint256 pid,
+        uint256 accPershare,
+        uint256 totalPower
+    );
 
     IERC721Card public nftToken;
     uint256 public lastRewardBlock; // Last block number that CHAs distribution occurs.
@@ -112,6 +118,7 @@ contract DogeFoodPool is Ownable, ERC721Holder {
         chaToken = _chaAddress;
         nftToken = IERC721Card(_nftAddress);
         // totalAllocPoint = totalAllocPoint.add(_allocPoint);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function releaseReward2(uint256 _pid) external view returns (uint256) {
@@ -142,7 +149,7 @@ contract DogeFoodPool is Ownable, ERC721Holder {
                 chaPerBlock: _chaPerBlock,
                 startBlock: _startBlock,
                 totalReward: _totalReward,
-                totalPower: 0
+                totalPower: 5000
             })
         );
     }
@@ -256,6 +263,7 @@ contract DogeFoodPool is Ownable, ERC721Holder {
                 block.number / (oneDayBlock / updatePerDay)
             ] = accChaPerShare;
         lastRewardBlock = block.number;
+        emit UpdateReward(msg.sender, _pid, accChaPerShare, pool.totalPower);
     }
 
     // Deposit LP tokens to DogeFoodPool for CHA allocation.

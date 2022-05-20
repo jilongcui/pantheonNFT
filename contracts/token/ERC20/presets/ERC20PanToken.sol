@@ -454,9 +454,9 @@ contract ERC20PanToken is ERC20Burnable, Ownable, ERC721Holder {
     }
 
     // Get a random 1000
-    function random() internal view returns (uint8) {
+    function random() internal view returns (uint16) {
         return
-            uint8(
+            uint16(
                 uint256(
                     keccak256(
                         abi.encodePacked(block.timestamp, block.difficulty)

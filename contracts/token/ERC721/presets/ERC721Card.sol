@@ -172,9 +172,9 @@ contract ERC721Card is
     }
 
     // Get a random 100
-    function random() private view returns (uint8) {
+    function random() private view returns (uint16) {
         return
-            uint8(
+            uint16(
                 uint256(
                     keccak256(
                         abi.encodePacked(block.timestamp, block.difficulty)

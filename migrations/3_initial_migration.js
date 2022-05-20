@@ -27,8 +27,10 @@ async function initBlindBox(category, tokenAddress, tokenValue, totalSupply, sta
 
     let blindBox = await DogeFoodBlindBox.deployed();
     let erc721Card = await ERC721Card.deployed();
+    let pool = await DogeFoodPool.deployed();
 
     await blindBox.setBBoxInfo(category, erc721Card.address, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    await blindBox.setPoolAddress(pool.address);
     // console.log("BlindBox pid = ", pid);
 }
 
@@ -46,13 +48,14 @@ async function initUSDT() {
 
 async function initSoloPool() {
     let pool = await DogeFoodPool.deployed();
+    let dogeToken = await ERC20DogeFoodToken.deployed();
     // console.log(token);
     // pool.addPool(rate, token, isLp, dayNum, withUpdate);
     // pool.setInviteEnable(true);
-    let chaPerBlock = parseInt(web3.utils.toWei("1000", "Gwei") / 24 / 1200);
+    let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 24 / 1200);
     let startBlock = await web3.eth.getBlockNumber();
-    await pool.addPool(web3.utils.toWei(chaPerBlock.toString()), startBlock.toString(), web3.utils.toWei("1000000"));
-
+    let totalReward = "1,000,000,000,000,000,000"
+    await pool.addPool(web3.utils.toWei(chaPerBlock.toString()), startBlock.toString(), web3.utils.toWei("1000000000000000000"));
     // await panToken.approve(pool.address, web3.utils.toWei("100"), { from: accounts[1] });
     // await pool.setInvite(accounts[0], { from: accounts[1] });
     // await pool.deposit(0, web3.utils.toWei("100"), { from: accounts[1] });
@@ -124,17 +127,14 @@ async function initC2C() {
     await c2c.downC2CItem('4');
 }
 
-async function initPanToken() {
-    let panToken = await ERC20PanToken.deployed();
-    console.log(panToken.address);
-    await panToken.transfer(accounts[1], web3.utils.toWei("20000"));
-    await panToken.transfer(accounts[7], web3.utils.toWei("20000"));
-    await panToken.transfer(accounts[8], web3.utils.toWei("20000"));
-    await panToken.transfer(accounts[9], web3.utils.toWei("20000"));
-
-    await panToken.transfer("0x3578ca6f43fD3C468c6E16DBC1ebec2f100030F6", web3.utils.toWei("10000"));
-    await panToken.transfer("0x95C65C0752b64B8Df8B749Dd096b47c473eba561", web3.utils.toWei("10000"));
-    console.log("114");
+async function initDogeFoodToken() {
+    let dogeToken = await ERC20DogeFoodToken.deployed();
+    console.log(dogeToken.address);
+    await dogeToken.transfer(accounts[1], web3.utils.toWei("20000000000000"));
+    // await dogeToken.transfer("0x6c6B336E3DC3Dd4E75F5F47a74be1A75Ab546807", web3.utils.toWei("2000000000000"));
+    // await dogeToken.transfer("0xEe0d65564F100E3dDB1DfF57c6aDb2d3D44315fD", web3.utils.toWei("2000000000000"));
+    // await dogeToken.transfer("0x1D571979cd5FebF7820Ac8D8c75F3D2E2E8d82eF", web3.utils.toWei("2000000000000"));
+    // console.log("114");
 }
 
 function toTimestamp(strDate) {
@@ -151,6 +151,10 @@ module.exports = async function (deployer, network, accounts) {
     let startTime = toTimestamp("2021-08-19 15:00:00");
     let endTime = toTimestamp("2022-08-29 23:00:00");
     let totalSupply = 1000;
+
+    // Init dogefood token
+    await initDogeFoodToken();
+
     // Init token and price
 
     tokenAddress = dogeToken.address; // DogeFood Address
