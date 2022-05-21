@@ -26,6 +26,8 @@ contract("DogeFoodInvite", function (accounts) {
     inviter = await DogeFoodPool.deployed();
     nft = await ERC721Card.deployed();
     dogeToken = await ERC20DogeFoodToken.deployed();
+    await inviter.setOneDayBlock(1);
+    await inviter.setUpdatePerDay(1);
   });
 
   after(function () {
@@ -184,12 +186,13 @@ contract("DogeFoodInvite", function (accounts) {
     const { logs } = tx;
     console.log(logs);
     assert.ok(Array.isArray(logs));
-    assert.equal(logs.length, 3);
+    assert.equal(logs.length, 4);
     console.log(logs);
-    const log = logs[2];
+    const log = logs[3];
     assert.equal(logs[0].event, 'UpGroupPower');
     assert.equal(logs[1].event, 'UpGroupPower');
-    assert.equal(logs[2].event, 'DepositWithNFT');
+    assert.equal(logs[2].event, 'UpGroupPower');
+    assert.equal(logs[3].event, 'DepositWithNFT');
     assert.equal(log.args.nft1.toNumber(), nftId1);
     let power = web3.utils.toNumber(await nft.powerOf(nftId1));
     power += web3.utils.toNumber(await nft.powerOf(nftId2));
@@ -201,6 +204,22 @@ contract("DogeFoodInvite", function (accounts) {
     assert.equal(parseInt(power * (1) / 100), parentPower_1)
     assert.equal(parseInt(power * (2) / 100), child1Power_1)
     // assert.equal(power * (100 + 2) / 100, child2Power_1)
+  });
+
+  it("Wait for 8 block update", async function () {
+    // nft.approved(nft.address, nftId);
+    for (let i = 0; i < 8; i++) {
+      await wait(4);
+      const poolInfo = await inviter.poolInfo(0);
+      // console.log(poolInfo);
+      const tx = await debug(inviter.updateReward(0));
+      const { logs } = tx;
+      console.log(tx);
+      assert.ok(Array.isArray(logs));
+      assert.equal(logs.length, 1);
+      const log = logs[0];
+      assert.equal(log.event, 'UpdateReward');
+    }
   });
 
   it("Check down group power", async function () {
@@ -221,14 +240,12 @@ contract("DogeFoodInvite", function (accounts) {
     let nftId2 = "124";
     let nftId3 = "125";
 
-    await inviter.setOneDayBlock(1);
-    await inviter.setUpdatePerDay(1);
     const tx = await inviter.withdraw(0, 0, { from: child2 });
     const { logs } = tx;
     console.log(logs);
     assert.ok(Array.isArray(logs));
-    assert.equal(logs.length, 1);
-    const log = logs[0];
+    assert.equal(logs.length, 4);
+    const log = logs[3];
     assert.equal(log.event, 'Withdraw');
     assert.equal(log.args.nft1.toNumber(), nftId1);
     let power = await nft.powerOf(nftId1);

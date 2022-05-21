@@ -129,7 +129,7 @@ contract DogeFoodPool is
 
     function releaseReward2(uint256 _pid) external view returns (uint256) {
         PoolInfo memory pool = poolInfo[_pid];
-        return pool.totalPower.mul(accChaPerShare).div(1e12);
+        return pool.totalPower.mul(accChaPerShare);
     }
 
     function remainReward(uint256 _pid) external view returns (uint256) {
@@ -224,25 +224,17 @@ contract DogeFoodPool is
             // uint256 accCha = accChaPerShare;
             // uint256 multiplier = getMultiplier(lastRewardBlock, endBlock);
             // uint256 chaReward = multiplier.mul(pool.chaPerBlock);
-            // accCha = accCha.add(chaReward.mul(1e12).div(pool.totalPower));
+            // accCha = accCha.add(chaReward.div(pool.totalPower));
             uint256 accPerShare = accPerShareList[
                 miner.endBlock / (oneDayBlock / updatePerDay)
             ];
             if (accPerShare == 0) accPerShare = accChaPerShare;
             uint256 power = miner.power.add(getGroupPower(_user));
 
-            return power.mul(accPerShare).div(1e12).sub(miner.rewardDebt);
+            return power.mul(accPerShare).sub(miner.rewardDebt);
         }
         return 0;
     }
-
-    // Update reward vairables for all pools. Be careful of gas spending!
-    // function updateReward() public {
-    //     uint256 length = poolInfo.length;
-    //     for (uint256 pid = 0; pid < length; ++pid) {
-    //         updateReward(pid);
-    //     }
-    // }
 
     // Update reward variables of the given pool to be up-to-date.
     function updateReward(uint256 _pid) public {
@@ -264,9 +256,7 @@ contract DogeFoodPool is
             chaReward = remain;
         }
         releasedReward = releasedReward.add(chaReward);
-        accChaPerShare = accChaPerShare.add(
-            chaReward.mul(1e12).div(totalPower)
-        );
+        accChaPerShare = accChaPerShare.add(chaReward.div(totalPower));
         if (accPerShareList[block.number / (oneDayBlock / updatePerDay)] == 0)
             accPerShareList[
                 block.number / (oneDayBlock / updatePerDay)
@@ -319,7 +309,7 @@ contract DogeFoodPool is
         miner.nft2 = uint32(nft2);
         miner.nft3 = uint32(nft3);
         uint256 accPerShare = getAccPerShare(block.number);
-        miner.rewardDebt = miner.power.mul(accPerShare).div(1e12);
+        miner.rewardDebt = miner.power.mul(accPerShare);
         minerCount[msg.sender] = count + 1;
         minerInfo[msg.sender][count] = miner;
         userPower[msg.sender] = userPower[msg.sender].add(power);
@@ -359,12 +349,10 @@ contract DogeFoodPool is
         MinerInfo storage miner = minerInfo[msg.sender][_pid];
         // updateReward(0);
         uint256 accPerShare = getAccPerShare(block.number);
-        uint256 pending = miner.power.mul(accPerShare).div(1e12).sub(
-            miner.rewardDebt
-        );
+        uint256 pending = miner.power.mul(accPerShare).sub(miner.rewardDebt);
         require(pending > 0, "harvest: none reward");
         safeChaTransfer(msg.sender, pending);
-        miner.rewardDebt = miner.power.mul(accPerShare).div(1e12);
+        miner.rewardDebt = miner.power.mul(accPerShare);
         emit Harvest(msg.sender, _pid, _idx, pending);
     }
 
@@ -380,10 +368,8 @@ contract DogeFoodPool is
         // require(accChaPerShare > 0, "accChaPerShare should not be zero");
         // updateReward(0);
         uint256 accPerShare = getAccPerShare(miner.endBlock);
-        if (miner.power.mul(accPerShare).div(1e12) > miner.rewardDebt) {
-            pending = miner.power.mul(accPerShare).div(1e12).sub(
-                miner.rewardDebt
-            );
+        if (miner.power.mul(accPerShare) > miner.rewardDebt) {
+            pending = miner.power.mul(accPerShare).sub(miner.rewardDebt);
             safeChaTransfer(msg.sender, pending);
         }
 

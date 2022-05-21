@@ -56,6 +56,12 @@ contract DogeFoodInvite is IInviter, Ownable {
     }
 
     function upGroupPower(address child, uint256 power) internal virtual {
+        if (isInvited(child)) {
+            uint8 ratio = inviteRatio[0];
+            uint256 gpower = power.mul(ratio).div(100);
+            groupPower[child] = groupPower[child].add(gpower);
+            emit UpGroupPower(child, child, gpower);
+        }
         for (uint8 layer = 0; layer < maxInviteLayer; layer++) {
             address parent = userParent[child];
             if (parent == address(0) || parent == child) return;
@@ -68,6 +74,12 @@ contract DogeFoodInvite is IInviter, Ownable {
     }
 
     function downGroupPower(address child, uint256 power) internal virtual {
+        if (isInvited(child)) {
+            uint8 ratio = inviteRatio[0];
+            uint256 gpower = power.mul(ratio).div(100);
+            groupPower[child] = groupPower[child].sub(gpower);
+            emit DownGroupPower(child, child, gpower);
+        }
         for (uint8 layer = 0; layer < maxInviteLayer; layer++) {
             address parent = userParent[child];
             if (parent == address(0) || parent == child) return;

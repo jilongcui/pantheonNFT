@@ -55,7 +55,8 @@ async function initSoloPool() {
     let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 24 / 1200);
     let startBlock = await web3.eth.getBlockNumber();
     let totalReward = "1,000,000,000,000,000,000"
-    await pool.addPool(web3.utils.toWei(chaPerBlock.toString()), startBlock.toString(), web3.utils.toWei("1000000000000000000"));
+    console.log("chaPerBlock ", chaPerBlock);
+    await pool.addPool(chaPerBlock.toString(), startBlock.toString(), web3.utils.toWei("1000000000000000000", "Gwei"));
     // await panToken.approve(pool.address, web3.utils.toWei("100"), { from: accounts[1] });
     // await pool.setInvite(accounts[0], { from: accounts[1] });
     // await pool.deposit(0, web3.utils.toWei("100"), { from: accounts[1] });
