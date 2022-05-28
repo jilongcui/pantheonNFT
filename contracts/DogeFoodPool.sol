@@ -41,9 +41,13 @@ contract DogeFoodPool is
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
+    bytes32 public constant SETUP_ROLE = keccak256("SETUP_ROLE");
+    bytes32 public constant UPDATE_ROLE = keccak256("UPDATE_ROLE");
+
     // Miner information describe miner. One should has many Miners;
     struct MinerInfo {
-        uint256 power; // 算力 rati = power / 1000
+        uint256 power; // basePower + groupPower
+        uint256 basePower; // User self power
         uint256 startBlock; // 开始block
         uint256 endBlock; // 结束block
         uint256 rewardDebt; // Reward debt. See explanation below.
@@ -125,6 +129,8 @@ contract DogeFoodPool is
         nftToken = IERC721Card(_nftAddress);
         // totalAllocPoint = totalAllocPoint.add(_allocPoint);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(SETUP_ROLE, msg.sender);
+        _setupRole(UPDATE_ROLE, msg.sender);
     }
 
     function releaseReward2(uint256 _pid) external view returns (uint256) {
@@ -141,13 +147,12 @@ contract DogeFoodPool is
         return poolInfo.length;
     }
 
-    // Add a new lp to the pool. Can only be called by the owner.
-    // XXX DO NOT add the same LP token more than once. Rewards will be messed up if you do.
     function addPool(
         uint256 _chaPerBlock,
         uint256 _startBlock,
         uint256 _totalReward
-    ) public onlyOwner {
+    ) public {
+        hasRole(SETUP_ROLE, _msgSender());
         _startBlock = block.number > _startBlock ? block.number : _startBlock;
         lastRewardBlock = _startBlock;
         poolInfo.push(
@@ -160,28 +165,31 @@ contract DogeFoodPool is
         );
     }
 
-    // Update the given pool's CHA power rate. Can only be called by the owner.
     function setPool(
         uint256 _pid,
         uint256 _chaPerBlock,
         uint256 _startBlock,
         uint256 _totalReward
-    ) public onlyOwner {
+    ) public {
+        hasRole(SETUP_ROLE, _msgSender());
         PoolInfo storage pool = poolInfo[_pid];
         pool.chaPerBlock = _chaPerBlock;
         pool.startBlock = _startBlock;
         pool.totalReward = _totalReward;
     }
 
-    function setOneDayBlock(uint32 _oneDayBlock) public onlyOwner {
+    function setOneDayBlock(uint32 _oneDayBlock) public {
+        hasRole(SETUP_ROLE, _msgSender());
         oneDayBlock = _oneDayBlock;
     }
 
-    function setUpdatePerDay(uint32 _updatePerDay) public onlyOwner {
+    function setUpdatePerDay(uint32 _updatePerDay) public {
+        hasRole(SETUP_ROLE, _msgSender());
         updatePerDay = _updatePerDay;
     }
 
-    function setPanToken(address _chaAddress) public onlyOwner {
+    function setPanToken(address _chaAddress) public {
+        hasRole(SETUP_ROLE, _msgSender());
         chaToken = IERC20(_chaAddress);
     }
 
@@ -189,7 +197,8 @@ contract DogeFoodPool is
         uint256 _pid,
         uint256 _chaPerBlock,
         uint256 _totalReward
-    ) public onlyOwner {
+    ) public {
+        hasRole(SETUP_ROLE, _msgSender());
         PoolInfo storage pool = poolInfo[_pid];
         pool.chaPerBlock = _chaPerBlock;
         pool.totalReward = _totalReward;
@@ -221,15 +230,8 @@ contract DogeFoodPool is
             endBlock = miner.endBlock;
         }
         if (pool.totalPower != 0) {
-            // uint256 accCha = accChaPerShare;
-            // uint256 multiplier = getMultiplier(lastRewardBlock, endBlock);
-            // uint256 chaReward = multiplier.mul(pool.chaPerBlock);
-            // accCha = accCha.add(chaReward.div(pool.totalPower));
-            uint256 accPerShare = accPerShareList[
-                miner.endBlock / (oneDayBlock / updatePerDay)
-            ];
-            if (accPerShare == 0) accPerShare = accChaPerShare;
-            uint256 power = miner.power.add(getGroupPower(_user));
+            uint256 accPerShare = getAccPerShare(endBlock);
+            uint256 power = miner.power;
 
             return power.mul(accPerShare).sub(miner.rewardDebt);
         }
@@ -239,6 +241,7 @@ contract DogeFoodPool is
     // Update reward variables of the given pool to be up-to-date.
     function updateReward(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
+        hasRole(UPDATE_ROLE, _msgSender());
         // uint256 remain = chaToken.balanceOf(address(this));
         uint256 remain = pool.totalReward.sub(releasedReward);
         if (remain <= 0) {
@@ -248,7 +251,7 @@ contract DogeFoodPool is
             lastRewardBlock = block.number;
             return;
         }
-        uint256 totalPower = pool.totalPower.add(getGroupPower(msg.sender));
+        uint256 totalPower = pool.totalPower;
         require(lastRewardBlock <= block.number, "lastRewardBlock not valid");
         uint256 multiplier = getMultiplier(lastRewardBlock, block.number);
         uint256 chaReward = multiplier.mul(pool.chaPerBlock);
@@ -286,24 +289,32 @@ contract DogeFoodPool is
         // );
         // updateReward(0);
         require(
-            (nftToken.ownerOf(nft1) == msg.sender) &&
-                (nftToken.ownerOf(nft2) == msg.sender) &&
-                (nftToken.ownerOf(nft3) == msg.sender),
-            "Depsite nft 1 2 3 should be owner of you."
+            (nftToken.ownerOf(nft1) == msg.sender),
+            "Depsite nft 1 should be owner of you."
         );
+        require(
+            (nftToken.ownerOf(nft2) == msg.sender),
+            "Depsite nft 2 should be owner of you."
+        );
+        require(
+            (nftToken.ownerOf(nft3) == msg.sender),
+            "Depsite nft 3 should be owner of you."
+        );
+
         uint256 power = 0;
-        power += nftToken.powerOf(nft1);
+        power = power.add(nftToken.powerOf(nft1));
         nftToken.safeTransferFrom(msg.sender, address(this), nft1);
-        power += nftToken.powerOf(nft2);
+        power = power.add(nftToken.powerOf(nft2));
         nftToken.safeTransferFrom(msg.sender, address(this), nft2);
-        power += nftToken.powerOf(nft3);
+        power = power.add(nftToken.powerOf(nft3));
         nftToken.safeTransferFrom(msg.sender, address(this), nft3);
-        power = power.mul((countday + 100) / 100);
-        // uint256 amount = 1000; // 1USDT = 1000 DOGEFOOD
-        pool.totalPower = pool.totalPower.add(power);
+        power = power.mul(countday + 100).div(100);
+        userPower[msg.sender] = userPower[msg.sender].add(power);
+        miner.basePower = power;
+        miner.power = power.add(getGroupPower(msg.sender));
+        pool.totalPower = pool.totalPower.add(miner.power);
         uint256 blockNumber = block.number;
         miner.startBlock = blockNumber;
-        miner.power = power;
         miner.endBlock = blockNumber.add(countday * oneDayBlock); // toFixed
         miner.nft1 = uint32(nft1);
         miner.nft2 = uint32(nft2);
@@ -312,16 +323,16 @@ contract DogeFoodPool is
         miner.rewardDebt = miner.power.mul(accPerShare);
         minerCount[msg.sender] = count + 1;
         minerInfo[msg.sender][count] = miner;
-        userPower[msg.sender] = userPower[msg.sender].add(power);
 
-        upGroupPower(msg.sender, power);
+        upGroupPower(msg.sender, miner.basePower);
+
         emit DepositWithNFT(
             msg.sender,
             _pid,
             count,
             miner.startBlock,
             miner.endBlock,
-            power,
+            miner.power,
             nft1,
             nft2,
             nft3
@@ -387,9 +398,9 @@ contract DogeFoodPool is
         // uint256 power = miner.power.mul(_amount).div(miner.amount);
         pool.totalPower = pool.totalPower.sub(miner.power);
 
-        userPower[msg.sender] = userPower[msg.sender].sub(miner.power);
+        userPower[msg.sender] = userPower[msg.sender].sub(miner.basePower);
 
-        downGroupPower(msg.sender, miner.power);
+        downGroupPower(msg.sender, miner.basePower);
         emit Withdraw(
             msg.sender,
             _pid,
@@ -401,6 +412,7 @@ contract DogeFoodPool is
         );
         //  reduce amount
         miner.power = 0;
+        miner.basePower = 0;
         miner.nft1 = 0;
         miner.nft2 = 0;
         miner.nft3 = 0;

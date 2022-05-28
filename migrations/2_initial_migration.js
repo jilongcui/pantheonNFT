@@ -66,7 +66,7 @@ module.exports = async function (deployer, network, accounts) {
     WUSDT = "0xc350c613e1c1f8e90f662ccbaf24cd32fe0ebc0b";
     PancakeRouter = "0x10ed43c718714eb63d5aa57b78b54704e256024e";
     airdropAddress = "0xb905BbD447325394d34957cB73c57Ec6aF075447";
-    beneficancy = "0xb905BbD447325394d34957cB73c57Ec6aF075447";
+    beneficancy = "0xc4148e5225E27c9C0a20Ed7C9f49918EC4917833";
     await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefood.app/tokens/");
     await deployer.deploy(ERC20DogeFoodToken, "DogeFood Token", "DogeFood", "420000000000000000", accounts[0]);
     // Deploy BlindBox

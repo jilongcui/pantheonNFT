@@ -119,7 +119,7 @@ contract("DogeFoodInvite", function (accounts) {
     const owner1 = await nft.ownerOf.call("124");
     assert.equal(owner1, to);
 
-    await nft.mintCard(3, "125", to);
+    await nft.mintWithLevel(3, "125", 4, to);
     const owner2 = await nft.ownerOf.call("125");
     assert.equal(owner2, to);
     // return assert.equal(nft.balanceOf(to), 1);
@@ -181,8 +181,9 @@ contract("DogeFoodInvite", function (accounts) {
     let nftId1 = "123";
     let nftId2 = "124";
     let nftId3 = "125";
+    let countday = 7;
     // nft.approved(nft.address, nftId);
-    const tx = await inviter.depositWithNFT(0, 7, nftId1, nftId2, nftId3, { from: child2 });
+    const tx = await debug(inviter.depositWithNFT(0, countday, nftId1, nftId2, nftId3, { from: child2 }));
     const { logs } = tx;
     console.log(logs);
     assert.ok(Array.isArray(logs));
@@ -197,13 +198,14 @@ contract("DogeFoodInvite", function (accounts) {
     let power = web3.utils.toNumber(await nft.powerOf(nftId1));
     power += web3.utils.toNumber(await nft.powerOf(nftId2));
     power += web3.utils.toNumber(await nft.powerOf(nftId3));
+    power = power * (countday + 100) / (100);
     console.log(power);
     const parentPower_1 = await inviter.getGroupPower(parent);
     const child1Power_1 = await inviter.getGroupPower(child);
-    // const child2Power_1 = await inviter.getGroupPower(child2);
-    assert.equal(parseInt(power * (1) / 100), parentPower_1)
-    assert.equal(parseInt(power * (2) / 100), child1Power_1)
-    // assert.equal(power * (100 + 2) / 100, child2Power_1)
+    const child2Power_1 = await inviter.getGroupPower(child2);
+    assert.equal(parseInt(power * (1) / 100), parentPower_1);
+    assert.equal(parseInt(power * (2) / 100), child1Power_1);
+    assert.equal(parseInt(power * (2) / 100), child2Power_1);
   });
 
   it("Wait for 8 block update", async function () {
@@ -212,9 +214,9 @@ contract("DogeFoodInvite", function (accounts) {
       await wait(4);
       const poolInfo = await inviter.poolInfo(0);
       // console.log(poolInfo);
-      const tx = await debug(inviter.updateReward(0));
+      const tx = await inviter.updateReward(0);
       const { logs } = tx;
-      console.log(tx);
+      // console.log(tx);
       assert.ok(Array.isArray(logs));
       assert.equal(logs.length, 1);
       const log = logs[0];
@@ -254,10 +256,10 @@ contract("DogeFoodInvite", function (accounts) {
 
     const parentPower_1 = await inviter.getGroupPower(parent);
     const child1Power_1 = await inviter.getGroupPower(child);
-    // const child2Power_1 = await inviter.getGroupPower(child2);
+    const child2Power_1 = await inviter.getGroupPower(child2);
     assert.equal(0, parentPower_1)
     assert.equal(0, child1Power_1)
-    // assert.equal(0, child2Power_1)
+    assert.equal(0, child2Power_1)
   });
 
 });

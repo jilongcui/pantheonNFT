@@ -52,7 +52,8 @@ async function initSoloPool() {
     // console.log(token);
     // pool.addPool(rate, token, isLp, dayNum, withUpdate);
     // pool.setInviteEnable(true);
-    let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 24 / 1200);
+    // let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 24 / 1200); // toFixed
+    let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 1200); // toFixed
     let startBlock = await web3.eth.getBlockNumber();
     let totalReward = "1,000,000,000,000,000,000"
     console.log("chaPerBlock ", chaPerBlock);
@@ -131,10 +132,11 @@ async function initC2C() {
 async function initDogeFoodToken(network, accounts) {
     let dogeToken = await ERC20DogeFoodToken.deployed();
     console.log(dogeToken.address);
-    await dogeToken.transfer(accounts[1], web3.utils.toWei("20000000000000"));
-    // await dogeToken.transfer("0x6c6B336E3DC3Dd4E75F5F47a74be1A75Ab546807", web3.utils.toWei("2000000000000"));
-    // await dogeToken.transfer("0xEe0d65564F100E3dDB1DfF57c6aDb2d3D44315fD", web3.utils.toWei("2000000000000"));
-    // await dogeToken.transfer("0x1D571979cd5FebF7820Ac8D8c75F3D2E2E8d82eF", web3.utils.toWei("2000000000000"));
+    await dogeToken.transfer(DogeFoodPool.address, web3.utils.toWei("20000000000000000", "Gwei"));
+    await dogeToken.transfer(accounts[1], web3.utils.toWei("2000000000000000", "Gwei"));
+    await dogeToken.transfer("0x6c6B336E3DC3Dd4E75F5F47a74be1A75Ab546807", web3.utils.toWei("2000000000000000", "Gwei"));
+    await dogeToken.transfer("0xEe0d65564F100E3dDB1DfF57c6aDb2d3D44315fD", web3.utils.toWei("2000000000000000", "Gwei"));
+    await dogeToken.transfer("0x1D571979cd5FebF7820Ac8D8c75F3D2E2E8d82eF", web3.utils.toWei("2000000000000000", "Gwei"));
     // console.log("114");
 }
 

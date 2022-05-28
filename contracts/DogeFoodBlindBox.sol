@@ -4,11 +4,15 @@ pragma solidity ^0.8.0;
 import "./utils/math/SafeMath.sol";
 import "./utils/Address.sol";
 import "./access/Ownable.sol";
+import "./access/AccessControlEnumerable.sol";
 import "./token/ERC20/IERC20.sol";
 import "./token/ERC721/IERC721Card.sol";
 
-contract DogeFoodBlindBox is Ownable {
+contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
     using SafeMath for uint256;
+
+    bytes32 public constant SETUP_ROLE = keccak256("SETUP_ROLE");
+    bytes32 public constant UPDATE_ROLE = keccak256("UPDATE_ROLE");
 
     enum BBoxStatus {
         BLINDBOX_INIT,
@@ -77,17 +81,29 @@ contract DogeFoodBlindBox is Ownable {
         chairperson = msg.sender;
         beneficiary = beneficiary_;
         blackholeAddr = address(0x000000000000000000000000000000000000dEaD);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(SETUP_ROLE, msg.sender);
+        _setupRole(UPDATE_ROLE, msg.sender);
     }
 
     function setBBoxToken(
         uint8 pid,
         address tokenAddr,
         uint256 tokenValue
-    ) public onlyOwner {
+    ) public {
         // 如果tokenAddr 为address(0) 表示是本币支付
         // 否则表示是代币支付
+        hasRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.tokenAddr = tokenAddr;
+        box.tokenValue = tokenValue;
+    }
+
+    function updateBBoxTokenValue(uint8 pid, uint256 tokenValue) public {
+        // 如果tokenAddr 为address(0) 表示是本币支付
+        // 否则表示是代币支付
+        hasRole(UPDATE_ROLE, _msgSender());
+        BBox storage box = bboxes[pid];
         box.tokenValue = tokenValue;
     }
 
@@ -95,40 +111,47 @@ contract DogeFoodBlindBox is Ownable {
         uint8 pid,
         uint256 start,
         uint256 end
-    ) public onlyOwner {
+    ) public {
+        hasRole(SETUP_ROLE, _msgSender());
         require(end > start);
         BBox storage box = bboxes[pid];
         box.startTimestamp = start;
         box.endTimestamp = end;
     }
 
-    function setBBoxCategory(uint8 pid, uint8 category) public onlyOwner {
+    function setBBoxCategory(uint8 pid, uint8 category) public {
+        hasRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.category = category;
     }
 
-    function setBBoxTotal(uint8 pid, uint16 total) public onlyOwner {
+    function setBBoxTotal(uint8 pid, uint16 total) public {
+        hasRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.total = total;
     }
 
-    function setBBoxNftToken(uint8 pid, address _nftAddress) public onlyOwner {
+    function setBBoxNftToken(uint8 pid, address _nftAddress) public {
+        hasRole(SETUP_ROLE, _msgSender());
         require(_nftAddress != address(0));
         BBox storage box = bboxes[pid];
         box.nftToken = _nftAddress;
     }
 
-    function setBBoxStatus(uint8 pid, BBoxStatus status) public onlyOwner {
+    function setBBoxStatus(uint8 pid, BBoxStatus status) public {
+        hasRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.status = status;
     }
 
-    function setBeneficiary(address _beneficiary) public onlyOwner {
+    function setBeneficiary(address _beneficiary) public {
+        hasRole(SETUP_ROLE, _msgSender());
         require(_beneficiary != address(0));
         beneficiary = _beneficiary;
     }
 
-    function setPoolAddress(address _address) public onlyOwner {
+    function setPoolAddress(address _address) public {
+        hasRole(SETUP_ROLE, _msgSender());
         require(_address != address(0));
         poolAddress = _address;
     }
@@ -141,7 +164,8 @@ contract DogeFoodBlindBox is Ownable {
         uint16 total,
         uint256 startTime,
         uint256 endTime
-    ) public onlyOwner returns (uint8 pid) {
+    ) public returns (uint8 pid) {
+        hasRole(SETUP_ROLE, _msgSender());
         bboxes.push(
             BBox({
                 nftToken: _nftAddress,

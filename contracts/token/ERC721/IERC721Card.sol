@@ -19,8 +19,8 @@ interface IERC721Card is IERC721, IERC721Metadata {
         address indexed from,
         address indexed to,
         uint16 category,
+        uint32 serialNo,
         uint16 level,
-        uint256 id,
         uint256 timestamp
     );
 
@@ -32,7 +32,7 @@ interface IERC721Card is IERC721, IERC721Metadata {
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
      */
-    function powerOf(uint256 id) external view returns (uint8 power);
+    function powerOf(uint256 id) external view returns (uint16 power);
 
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
@@ -60,8 +60,9 @@ interface IERC721Card is IERC721, IERC721Metadata {
      * - `tokenId` must exist.
      */
     function mintWithLevel(
-        uint8 _category,
-        uint8 _level,
+        uint8 category,
+        uint32 serialNo,
+        uint8 level,
         address to
     ) external returns (bool);
 
@@ -73,7 +74,7 @@ interface IERC721Card is IERC721, IERC721Metadata {
      * - `tokenId` must exist.
      */
     function mintCard(
-        uint8 _category,
+        uint8 category,
         uint32 serailNo,
         address to
     ) external returns (uint8 level, uint256 power);

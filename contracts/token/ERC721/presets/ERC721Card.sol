@@ -179,7 +179,7 @@ contract ERC721Card is
                     keccak256(
                         abi.encodePacked(block.timestamp, block.difficulty)
                     )
-                ) % 1000
+                ) % 10000
             );
     }
 
@@ -203,13 +203,13 @@ contract ERC721Card is
     {
         uint16 rand = random();
         uint8 level = 0;
-        if (rand > (200 + 150 + 100 + 10)) {
+        if (rand > (2000 + 1500 + 1000 + 100)) {
             level = 0;
-        } else if (rand > (150 + 100 + 10)) {
+        } else if (rand > (1500 + 1000 + 100)) {
             level = 1;
-        } else if (rand > (100 + 10)) {
+        } else if (rand > (1000 + 100)) {
             level = 2;
-        } else if (rand > 10) {
+        } else if (rand > 100) {
             level = 3;
         } else {
             level = 4;
