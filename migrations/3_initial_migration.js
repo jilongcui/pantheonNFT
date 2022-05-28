@@ -23,7 +23,7 @@ async function initIDO() {
     await panToken.transfer(ido.address, web3.utils.toWei("400000"));
 }
 
-async function initBlindBox(category, tokenAddress, tokenValue, totalSupply, startTime, endTime) {
+async function addBlindBox(category, tokenAddress, tokenValue, totalSupply, startTime, endTime) {
 
     let blindBox = await DogeFoodBlindBox.deployed();
     let erc721Card = await ERC721Card.deployed();
@@ -32,6 +32,14 @@ async function initBlindBox(category, tokenAddress, tokenValue, totalSupply, sta
     await blindBox.setBBoxInfo(category, erc721Card.address, tokenAddress, tokenValue, totalSupply, startTime, endTime);
     await blindBox.setPoolAddress(pool.address);
     // console.log("BlindBox pid = ", pid);
+}
+
+async function initBlindBox(network, accounts) {
+    let blindBox = await DogeFoodBlindBox.deployed();
+    const SetupRoler = web3.utils.keccak256('SETUP_ROLE')
+    await blindBox.grantRole(SetupRoler, accounts[0]); // 0x5538b2e1202EFEa9BD1fb5B5473fcf1C21673aF3
+    const UpdateRoler = web3.utils.keccak256('UPDATE_ROLE')
+    await blindBox.grantRole(UpdateRoler, accounts[1]); // 0x0748d86F8E498b3791536fe7e509c23207B78b59
 }
 
 async function initUSDT() {
@@ -46,9 +54,15 @@ async function initUSDT() {
     await usdtToken.transfer("0x95C65C0752b64B8Df8B749Dd096b47c473eba561", web3.utils.toWei("10000"));
 }
 
-async function initSoloPool() {
+async function initSoloPool(network, accounts) {
     let pool = await DogeFoodPool.deployed();
     let dogeToken = await ERC20DogeFoodToken.deployed();
+
+    const SetupRoler = web3.utils.keccak256('SETUP_ROLE')
+    await pool.grantRole(SetupRoler, accounts[0]); // 0x5538b2e1202EFEa9BD1fb5B5473fcf1C21673aF3
+    const UpdateRoler = web3.utils.keccak256('UPDATE_ROLE')
+    await pool.grantRole(UpdateRoler, accounts[1]); // 0x0748d86F8E498b3791536fe7e509c23207B78b59
+
     // console.log(token);
     // pool.addPool(rate, token, isLp, dayNum, withUpdate);
     // pool.setInviteEnable(true);
@@ -133,7 +147,7 @@ async function initDogeFoodToken(network, accounts) {
     let dogeToken = await ERC20DogeFoodToken.deployed();
     console.log(dogeToken.address);
     await dogeToken.transfer(DogeFoodPool.address, web3.utils.toWei("20000000000000000", "Gwei"));
-    await dogeToken.transfer(accounts[1], web3.utils.toWei("2000000000000000", "Gwei"));
+    await dogeToken.transfer("0xb905BbD447325394d34957cB73c57Ec6aF075447", web3.utils.toWei("2000000000000000", "Gwei"));
     await dogeToken.transfer("0x6c6B336E3DC3Dd4E75F5F47a74be1A75Ab546807", web3.utils.toWei("2000000000000000", "Gwei"));
     await dogeToken.transfer("0xEe0d65564F100E3dDB1DfF57c6aDb2d3D44315fD", web3.utils.toWei("2000000000000000", "Gwei"));
     await dogeToken.transfer("0x1D571979cd5FebF7820Ac8D8c75F3D2E2E8d82eF", web3.utils.toWei("2000000000000000", "Gwei"));
@@ -159,12 +173,12 @@ module.exports = async function (deployer, network, accounts) {
     await initDogeFoodToken(network, accounts);
 
     // Init token and price
-
+    await initBlindBox(network, accounts);
     tokenAddress = dogeToken.address; // DogeFood Address
     tokenValue = web3.utils.toWei("20", "Gwei"); // $0.00000000000269484
-    await initBlindBox(1, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    await addBlindBox(1, tokenAddress, tokenValue, totalSupply, startTime, endTime);
     tokenValue = web3.utils.toWei("15", "Gwei"); // $0.00000000000269484
-    await initBlindBox(2, tokenAddress, tokenValue, totalSupply, startTime, endTime);
-    tokenValue = web3.utils.toWei("0.035"); // 0.35 BNB
-    await initBlindBox(3, zeroAddress, tokenValue, totalSupply, startTime, endTime);
+    await addBlindBox(2, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    tokenValue = web3.utils.toWei("0.35"); // 0.35 BNB
+    await addBlindBox(3, zeroAddress, tokenValue, totalSupply, startTime, endTime);
 }

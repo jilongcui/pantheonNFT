@@ -1,7 +1,35 @@
-const HDWalletProvider = require('truffle-hdwallet-provider');
+const HDWalletProvider = require('@truffle/hdwallet-provider');
 const fs = require('fs');
 const Web3 = require('web3');
 const mnemonic = fs.readFileSync(".secret").toString().trim();
+
+function newProvider(providerUrl) {
+  const secretStr = fs.readFileSync('.secret').toString();
+  const privateKeys = secretStr.split('\n')
+  console.log(privateKeys);
+  const wsProvider = new Web3.providers.WebsocketProvider(providerUrl, {
+    // const wsProvider = new Web3.providers.HttpProvider(providerUrl, {
+    timeout: 30000, // ms
+    clientConfig: {
+      maxReceivedFrameSize: 10000000,
+      maxReceivedMessageSize: 80000000,
+      keepalive: true,
+      keepaliveInterval: 6000, // ms
+    },
+    reconnect: {
+      auto: true,
+      delay: 15000,
+      maxAttempts: false,
+      onTimeout: false,
+    },
+    // headers: { 'x-api-key': this.network.apiKey },
+  });
+  return new HDWalletProvider({
+    privateKeys: privateKeys,
+    pollingInterval: 60000,
+    providerOrUrl: wsProvider,
+  });
+}
 
 module.exports = {
   networks: {
@@ -14,41 +42,27 @@ module.exports = {
 
     testnet: {
       provider: () => new HDWalletProvider(mnemonic,
-        `https://data-seed-prebsc-1-s1.binance.org:8545`,
+        `https://bsc.getblock.io/testnet/?api_key=d224e8b2-915f-44e8-ba73-3914fcb05900`,
+        // `https://data-seed-prebsc-1-s2.binance.org:8545`,
         address_index = 0,//从给的mnemonic数组的第几下标开始取
         num_addresses = 20
       ),
       network_id: 97,
       gas: 8500000,
       confirmations: 5,
-      timeoutBlocks: 1000,
+      timeoutBlocks: 3000,
       skipDryRun: true
     },
     bsc: {
-      provider: () => new HDWalletProvider(mnemonic,
-        new Web3.providers.HttpProvider(`https://bsc-dataseed.binance.org`, {
-          // new Web3.providers.HttpProvider(`https://black-frosty-smoke.bsc.quiknode.pro/2716dc3a83d20ec53b8bdf379dae75c68a39edcb/`, {
-          // clientConfig: {
-          //         maxReceivedFrameSize: 10000000,
-          //         maxReceivedMessageSize: 10000000,
-          // },
-          reconnect: {
-            auto: true,
-            delay: 5000,
-            maxAttempts: 10,
-          },
-        }),
-        // `https://black-frosty-smoke.bsc.quiknode.pro/2716dc3a83d20ec53b8bdf379dae75c68a39edcb/`,
-        //`https://bsc-dataseed3.binance.org`,
-        address_index = 28,//从给的mnemonic数组的第几下标开始取
-        num_addresses = 29
-      ),
+      provider: newProvider('wss://bsc-ws-node.nariox.org:443'),
+      // `https://black-frosty-smoke.bsc.quiknode.pro/2716dc3a83d20ec53b8bdf379dae75c68a39edcb/`,
+      //`https://bsc-dataseed3.binance.org`,
       network_id: 56,
-      gas: 6500000,
-      gasPrice: 5000000000,
+      gas: 8500000,
+      // gasPrice: 5000000000,
       networkCheckTimeout: 10000,
       confirmations: 5,
-      timeoutBlocks: 1000,
+      timeoutBlocks: 3000,
       skipDryRun: true
     },
     rinkeby: {
