@@ -38,7 +38,7 @@ module.exports = async function (deployer, network, accounts) {
     airdropAddress = "0xb905BbD447325394d34957cB73c57Ec6aF075447";
     beneficancy = "0xb905BbD447325394d34957cB73c57Ec6aF075447";
     pancakeRouter = "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3";
-    await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefood.app/tokens/");
+    await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefoodnft.app/api/tokens/");
     await deployer.deploy(ERC20DogeFoodToken, "DogeFood Token", "DogeFood", web3.utils.toWei("420000000000000000"), accounts[0]);
     // Deploy BlindBox
     await deployer.deploy(DogeFoodBlindBox, accounts[0]);
@@ -53,7 +53,7 @@ module.exports = async function (deployer, network, accounts) {
     airdropAddress = "0xb905BbD447325394d34957cB73c57Ec6aF075447";
     beneficancy = "0xb905BbD447325394d34957cB73c57Ec6aF075447";
     pancakeRouter = "0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3";
-    await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefood.app/tokens/");
+    await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefoodnft.app/api/tokens/");
     await deployer.deploy(ERC20DogeFoodToken, "DogeFood Token", "DogeFood", "420000000000000000", accounts[0]);
     // Deploy BlindBox
     await deployer.deploy(DogeFoodBlindBox, accounts[0]);
@@ -67,7 +67,7 @@ module.exports = async function (deployer, network, accounts) {
     PancakeRouter = "0x10ed43c718714eb63d5aa57b78b54704e256024e";
     airdropAddress = "0xb905BbD447325394d34957cB73c57Ec6aF075447";
     beneficancy = "0xc4148e5225E27c9C0a20Ed7C9f49918EC4917833";
-    await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefood.app/tokens/");
+    await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefoodnft.app/api/tokens/");
     await deployer.deploy(ERC20DogeFoodToken, "DogeFood Token", "DogeFood", "420000000000000000", accounts[0]);
     // Deploy BlindBox
     await deployer.deploy(DogeFoodBlindBox, beneficancy);
@@ -81,14 +81,14 @@ module.exports = async function (deployer, network, accounts) {
     pancakeRouter = "0x10ed43c718714eb63d5aa57b78b54704e256024e";
     airdropAddress = "0x5Bbdf8eDC852f114eDAF8D92Ce31cC74F62Db2BC";
     liquidAddress = "0xBDe8748b12516f73B4e6682e01Ec95C469C639DF"
-    beneficancy = "0x2d6D02A42CB933c5Fb339cC79837b1b0Ef4fab34";
+    // beneficancy = "0x2d6D02A42CB933c5Fb339cC79837b1b0Ef4fab34";
+    beneficancy = "0xc4148e5225E27c9C0a20Ed7C9f49918EC4917833";
+    DOGEFOOD = "0x1bEc41a36356D5574Aeb068B599Ab7e48dD008b8";
     console.log("accounts", accounts);
-    await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefood.app/tokens/");
-    await deployer.deploy(ERC20DogeFoodToken, "DogeFood Token", "DogeFood", "420000000000000000", accounts[0]);
+    // await deployer.deploy(ERC721Card, accounts[0], "DogeFood NFT", "DOGENFT", "https://api.dogefoodnft.app/api/tokens/");
+    // await deployer.deploy(ERC20DogeFoodToken, "DogeFood Token", "DogeFood", "420000000000000000", accounts[0]);
     // Deploy BlindBox
     await deployer.deploy(DogeFoodBlindBox, beneficancy);
-    // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, 200000000, accounts[0]);
-    // await deployer.deploy(ERC20PanToken, pancakeRouter, erc721.address, blackHoleAddress, airdropAddress, liquidAddress, 200000000, accounts[0]);
-    await deployer.deploy(DogeFoodPool, ERC20DogeFoodToken.address, ERC721Card.address);
+    await deployer.deploy(DogeFoodPool, DOGEFOOD, ERC721Card.address);
   }
 };

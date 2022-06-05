@@ -124,6 +124,12 @@ contract ERC721Card is
         return true;
     }
 
+    function setBaseURI(string memory _tokenURI) public returns (bool) {
+        hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _baseTokenURI = _tokenURI;
+        return true;
+    }
+
     function _baseURI() internal view virtual override returns (string memory) {
         return _baseTokenURI;
     }
