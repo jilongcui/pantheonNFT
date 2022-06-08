@@ -105,7 +105,7 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
     ) public {
         // 如果tokenAddr 为address(0) 表示是本币支付
         // 否则表示是代币支付
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.tokenAddr = tokenAddr;
         box.tokenValue = tokenValue;
@@ -114,7 +114,7 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
     function updateBBoxTokenValue(uint8 pid, uint256 tokenValue) public {
         // 如果tokenAddr 为address(0) 表示是本币支付
         // 否则表示是代币支付
-        hasRole(UPDATE_ROLE, _msgSender());
+        _checkRole(UPDATE_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.tokenValue = tokenValue;
     }
@@ -124,7 +124,7 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
         uint256 start,
         uint256 end
     ) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         require(end > start);
         BBox storage box = bboxes[pid];
         box.startTimestamp = start;
@@ -132,44 +132,44 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
     }
 
     function setBBoxCategory(uint8 pid, uint8 category) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.category = category;
     }
 
     function setBBoxTotal(uint8 pid, uint16 total) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.total = total;
     }
 
     function setBBoxCurrent(uint8 pid, uint16 current) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.current = current;
     }
 
     function setBBoxNftToken(uint8 pid, address _nftAddress) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         require(_nftAddress != address(0));
         BBox storage box = bboxes[pid];
         box.nftToken = _nftAddress;
     }
 
     function setBBoxStatus(uint8 pid, BBoxStatus status) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         BBox storage box = bboxes[pid];
         box.status = status;
     }
 
     function setBeneficiary(address _beneficiary) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         require(_beneficiary != address(0));
         beneficiary = _beneficiary;
     }
 
     function setPoolAddress(address _address) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         require(_address != address(0));
         poolAddress = _address;
     }
@@ -183,7 +183,7 @@ contract DogeFoodBlindBox is Ownable, AccessControlEnumerable {
         uint256 startTime,
         uint256 endTime
     ) public returns (uint8 pid) {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         bboxes.push(
             BBox({
                 nftToken: _nftAddress,

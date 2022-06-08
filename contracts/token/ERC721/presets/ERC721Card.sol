@@ -109,6 +109,7 @@ contract ERC721Card is
         uint8 _level,
         uint16 _total
     ) public returns (bool) {
+        _checkRole(DEFAULT_ADMIN_ROLE, _msgSender());
         CardInfo storage card = cardInfo[_category][_level];
         card.total = _total;
         return true;
@@ -119,13 +120,14 @@ contract ERC721Card is
         uint8 _level,
         uint16 _power
     ) public returns (bool) {
+        _checkRole(DEFAULT_ADMIN_ROLE, _msgSender());
         CardInfo storage card = cardInfo[_category][_level];
         card.power = _power;
         return true;
     }
 
     function setBaseURI(string memory _tokenURI) public returns (bool) {
-        hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _checkRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _baseTokenURI = _tokenURI;
         return true;
     }

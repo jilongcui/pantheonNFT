@@ -9,7 +9,11 @@ const DogeFoodPool = artifacts.require("DogeFoodPool");
 async function initNFT(network, accounts) {
     let erc721 = await ERC721Card.deployed();
     const MinterRoler = web3.utils.keccak256('MINTER_ROLE')
+    // const DEFAULT_ADMIN_ROLE = 0x00;
+    const DEFAULT_ADMIN_ROLE = await erc721.DEFAULT_ADMIN_ROLE.call()
     await erc721.grantRole(MinterRoler, DogeFoodBlindBox.address);
+    await erc721.grantRole(MinterRoler, "0xc4148e5225E27c9C0a20Ed7C9f49918EC4917833");
+    await erc721.grantRole(DEFAULT_ADMIN_ROLE, "0xc4148e5225E27c9C0a20Ed7C9f49918EC4917833");
 }
 
 async function initIDO() {
@@ -74,7 +78,8 @@ async function initSoloPool(network, accounts) {
     // pool.setInviteEnable(true);
     let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 24 / 1200);
     // let chaPerBlock = parseInt(web3.utils.toWei("100000000000000", "Gwei") / 1200); // forTest
-    let startBlock = await web3.eth.getBlockNumber();
+    // let startBlock = await web3.eth.getBlockNumber();
+    let startBlock = 18423247; //2022 19:57:11 
     let totalReward = "1,000,000,000,000,000,000"
     console.log("chaPerBlock ", chaPerBlock);
     await pool.addPool(chaPerBlock.toString(), startBlock.toString(), web3.utils.toWei("1000000000000000000", "Gwei"));

@@ -154,7 +154,7 @@ contract DogeFoodPool is
         uint256 _startBlock,
         uint256 _totalReward
     ) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         _startBlock = block.number > _startBlock ? block.number : _startBlock;
         lastRewardBlock = _startBlock;
         poolInfo.push(
@@ -173,7 +173,7 @@ contract DogeFoodPool is
         uint256 _startBlock,
         uint256 _totalReward
     ) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         PoolInfo storage pool = poolInfo[_pid];
         pool.chaPerBlock = _chaPerBlock;
         pool.startBlock = _startBlock;
@@ -181,21 +181,22 @@ contract DogeFoodPool is
     }
 
     function setOneDayBlock(uint32 _oneDayBlock) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         oneDayBlock = _oneDayBlock;
     }
 
     function setUpdatePerDay(uint32 _updatePerDay) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         updatePerDay = _updatePerDay;
     }
 
     function setPanToken(address _chaAddress) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         chaToken = IERC20(_chaAddress);
     }
 
     function setWithdrawBanned(address _user) public {
+        _checkRole(SETUP_ROLE, _msgSender());
         _setupRole(WITHDRAW_BANNED, _user);
     }
 
@@ -204,7 +205,7 @@ contract DogeFoodPool is
         uint256 _chaPerBlock,
         uint256 _totalReward
     ) public {
-        hasRole(SETUP_ROLE, _msgSender());
+        _checkRole(SETUP_ROLE, _msgSender());
         PoolInfo storage pool = poolInfo[_pid];
         pool.chaPerBlock = _chaPerBlock;
         pool.totalReward = _totalReward;
@@ -247,7 +248,7 @@ contract DogeFoodPool is
     // Update reward variables of the given pool to be up-to-date.
     function updateReward(uint256 _pid) public {
         PoolInfo storage pool = poolInfo[_pid];
-        hasRole(UPDATE_ROLE, _msgSender());
+        _checkRole(UPDATE_ROLE, _msgSender());
         // uint256 remain = chaToken.balanceOf(address(this));
         uint256 remain = pool.totalReward.sub(releasedReward);
 

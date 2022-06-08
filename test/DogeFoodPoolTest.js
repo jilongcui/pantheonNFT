@@ -130,7 +130,7 @@ contract("DogeFoodPool", function (accounts) {
     const { logs } = tx;
     console.log(logs);
     assert.ok(Array.isArray(logs));
-    assert.equal(logs.length, 0);
+    assert.equal(logs.length, 1);
     // const log = logs[0];
     // assert.equal(log.event, 'DepositWithNFT');
     // assert.equal(log.args.nft1.toNumber(), nftId1);
@@ -152,6 +152,82 @@ contract("DogeFoodPool", function (accounts) {
     const log = logs[0];
     assert.equal(log.event, 'Withdraw');
     assert.equal(log.args.nft1.toNumber(), nftId1);
+    // assert.equal(c2c.totalItem.call(), totalItem+1, "C2C total item should should increase one.");
+  });
+
+  it("Set banned address", async function () {
+    // nft.approved(nft.address, nftId);
+    await wait(10);
+
+    const tx = await pool.setWithdrawBanned(accounts[0]);
+    const { logs } = tx;
+    console.log(logs);
+    assert.ok(Array.isArray(logs));
+    assert.equal(logs.length, 1);
+    // const log = logs[0];
+    // assert.equal(log.event, 'DepositWithNFT');
+    // assert.equal(log.args.nft1.toNumber(), nftId1);
+    // assert.equal(c2c.totalItem.call(), totalItem+1, "C2C total item should should increase one.");
+  });
+
+  it("Approve 3 NFT tokens to Pool", async function () {
+
+    let nftId = "123";
+    // console.log(c2c.address);
+    let tx = await nft.approve(pool.address, nftId);
+    let approver = await nft.getApproved(nftId);
+    // console.log(approver);
+    assert.equal(approver, pool.address);
+
+    nftId = "124";
+    // console.log(c2c.address);
+    tx = await nft.approve(pool.address, nftId);
+    approver = await nft.getApproved(nftId);
+    // console.log(approver);
+    assert.equal(approver, pool.address);
+
+    nftId = "125";
+    tx = await nft.approve(pool.address, nftId);
+    approver = await nft.getApproved(nftId);
+    // console.log(approver);
+    assert.equal(approver, pool.address);
+
+  });
+
+  it("Depsit 3 NFT token to Pool for banned account", async function () {
+    let nftId1 = "123";
+    let nftId2 = "124";
+    let nftId3 = "125";
+    // nft.approved(nft.address, nftId);
+    const tx = await pool.depositWithNFT(0, 7, nftId1, nftId2, nftId3);
+    const { logs } = tx;
+    console.log(logs);
+    assert.ok(Array.isArray(logs));
+    assert.equal(logs.length, 1);
+    const log = logs[0];
+    assert.equal(log.event, 'DepositWithNFT');
+    assert.equal(log.args.nft1.toNumber(), nftId1);
+    // assert.equal(c2c.totalItem.call(), totalItem + 1, "C2C total item should should increase one.");
+  });
+
+  it("Withdraw 3 NFT token from Pool for banned account", async function () {
+    let nftId1 = "123";
+    let nftId2 = 2;
+    let nftId3 = 3;
+    let poolId = 0;
+    // nft.approved(nft.address, nftId);
+    let tx;
+    try {
+      tx = await pool.withdraw(poolId, 0);
+    } catch (error) {
+      // console.log(error);
+      const { reason, data } = error;
+      console.log(reason);
+      // console.log(data);
+      assert.equal(reason, "Be banned.");
+    }
+    console.log(tx);
+
     // assert.equal(c2c.totalItem.call(), totalItem+1, "C2C total item should should increase one.");
   });
 
