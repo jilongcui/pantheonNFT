@@ -1,12 +1,14 @@
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const fs = require('fs');
 const Web3 = require('web3');
+require('dotenv').config();
 const mnemonic = fs.readFileSync(".secret").toString().trim();
 
 function newProvider(providerUrl) {
-  const secretStr = fs.readFileSync('.secret').toString();
+  const secretStr = fs.readFileSync('.secret').toString().trim();
   const privateKeys = secretStr.split('\n')
   console.log(privateKeys);
+  console.log(process.env.BSCSCAN_API_KEY);
   const wsProvider = new Web3.providers.WebsocketProvider(providerUrl, {
     // const wsProvider = new Web3.providers.HttpProvider(providerUrl, {
     timeout: 30000, // ms
@@ -94,5 +96,12 @@ module.exports = {
         // evmVersion: "byzantium"
       }
     }
+  },
+  plugins: [
+    'truffle-plugin-verify'
+  ],
+  api_keys: {
+    etherscan: process.env.ETHERSCAN_API_KEY,
+    bscscan: process.env.BSCSCAN_API_KEY
   }
 }
